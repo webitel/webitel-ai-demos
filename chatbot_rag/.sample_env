@@ -1,0 +1,3 @@
+OPENAI_API_KEY = "API_KEY"
+FAQ_FILE = "./data/processed/faq.csv"
+CROSS_ENCODER_FILE = "./data/processed/cross_encoder.csv"
