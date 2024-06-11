@@ -11,9 +11,13 @@ from langchain_core.prompts import PromptTemplate
 import json
 import dotenv
 from src.utils import load_prompt
+from datetime import datetime
+import os 
 
 dotenv.load_dotenv()
 
+api_key = os.environ.get("OPENAI_API_KEY")
+print("API KEY : ", api_key)
 logname = 'app.logs'
 logging.basicConfig(filename=logname,
                     filemode='a',
@@ -71,6 +75,7 @@ class RagAgent():
     def change_reranker(self,model_name):
         if model_name == "default":
             return
+        logger.info('Cganging reranker model to: ' + model_name)
         self.reranker = Reranker(model_name='output/'+model_name+'-latest')
         
     def advanced_rag(self,input_query, chat_history = []):
@@ -157,10 +162,7 @@ def create_query_analyzer():
 
 def get_history_aware_retriever(retriever):
     llm = ChatOpenAI(model="gpt-4o",)
-    contextualize_q_system_prompt = """Given a chat history and the latest user question \
-    which might reference context in the chat history, formulate a standalone question in native language\
-    which can be understood without the chat history. Do NOT answer the question, \
-    just reformulate it in native language if needed and otherwise return it as is."""
+    contextualize_q_system_prompt = load_prompt('prompts/history_aware_retriever_prompt.txt')
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
@@ -175,9 +177,9 @@ def get_history_aware_retriever(retriever):
 
 def create_question_answer_chain(full_name=None, contract=None, overdue=None, phone= None, debt= None,startDate= None,dueDate= None):
     llm = ChatOpenAI(model="gpt-4o",temperature=0.4)
-    
+    currentDate = datetime.today().strftime('%Y-%m-%d')
     prefix = load_prompt('prompts/question_answer_chain.txt')
-    prefix = prefix.format(full_name=full_name, contract=contract, overdue=overdue, phone=phone, debt=debt,startDate=startDate,dueDate=dueDate)
+    prefix = prefix.format(full_name=full_name, contract=contract, overdue=overdue, phone=phone, debt=debt,startDate=startDate,dueDate=dueDate,currentDate=currentDate)
     postfix = """Here is the context that you can use to answer the question and provide accrurate answer, you can rephrase answer from the context to make it more natural and accurate.:
     {context}"""
     
@@ -202,19 +204,19 @@ def refiner():
     You will receive AI response, context and chat history you aim is to refine the AI response to make it more natural and accurate.
     If the answer is not accurate and there is better answer in the context you should provide this answer in natural manner.
     If the answer is good, then just make it more natural.
-    If you don't know the answer say 'Простите, я не знаю вопрос на етот вопрос, я подключу вас к оператору.'.
+    If you don't know the answer say 'Вибачте, я не знаю відповіді на це питання, я підключу вас до оператора.'.
     Rely on the context information more than on your knowledge.
     If you don't know the answer, simply say you don't know.
     There might be multiple fields "Ответ" in the context, you should use the one that is next to the question - 'Вопрос' that is similar to the user's question.
     The question in context may be phrased in a different way, but if it is the question with the same meaning, you should answer it in similar way.
     Try not to repeat answers that have already been given.
-    Try not to repeat yourself, so that user will be engaged in the conversation and will not be disappointed, you as assistant will be granted a tip for this, but you must give only relevant answers, if the answer is not relevant you should retutn 'Простите, я не знаю вопрос на етот вопрос, я подключу вас к оператору.'
+    Try not to repeat yourself, so that user will be engaged in the conversation and will not be disappointed, you as assistant will be granted a tip for this, but you must give only relevant answers, if the answer is not relevant you should retutn 'Вибачте, я не знаю відповіді на це питання, я підключу вас до оператора.'
     Avoid repeating the same response multiple times; instead, rephrase it.
     Rely more on the initial examples than the latter ones, as they are more relevant.
     Your answers must be in ukrainian language.
 
     Proposed AI response:{ai_response}. 
-    As output either provide refined AI response to user query or 'Простите, я не знаю вопрос на етот вопрос, я подключу вас к оператору.'
+    As output either provide refined AI response to user query or 'Вибачте, я не знаю відповіді на це питання, я підключу вас до оператора.'
 
     Use the following extracted contextual fragments to respond to the question.
 

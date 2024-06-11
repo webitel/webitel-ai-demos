@@ -11,13 +11,17 @@ from sentence_transformers import InputExample, LoggingHandler, util
 from sentence_transformers.cross_encoder import CrossEncoder
 from sentence_transformers.cross_encoder.evaluation import CERerankingEvaluator
 import json
+import dotenv
 
 logging.basicConfig(
     format="%(asctime)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO, handlers=[LoggingHandler()]
 )
 
+dotenv.load_dotenv()
+cross_encoder_file = os.environ.get("CROSS_ENCODER_FILE")
+
 def train_cross_encoder(model_path):
-    df = pd.read_csv("client_data/cross_encoder_data.csv")
+    df = pd.read_csv(cross_encoder_file)
     # First, we define the transformer model we want to fine-tune
     model_name = "DiTy/cross-encoder-russian-msmarco"
     train_batch_size = 32

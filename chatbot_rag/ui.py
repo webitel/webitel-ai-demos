@@ -91,21 +91,24 @@ def add_sample_for_cross_encoder(df: pd.DataFrame):
         if negative:
             query_data[query]["All_Negatives"].append(negative)
 
-    current_data = pd.read_csv("client_data/cross_encoder_data.csv")
+    try:
+        current_data = pd.read_csv(cross_encoder_file)
 
-    for index, row in current_data.iterrows():
-        query = str(row["query"])
-        positive = row["positive"]
-        negative = row["negative"]
+        for index, row in current_data.iterrows():
+            query = str(row["query"])
+            positive = row["positive"]
+            negative = row["negative"]
 
-        if query not in query_data:
-            query_data[query] = {"All_Positivies": [], "All_Negatives": []}
+            if query not in query_data:
+                query_data[query] = {"All_Positivies": [], "All_Negatives": []}
 
-        if positive:
-            query_data[query]["All_Positivies"].extend(json.loads(positive.replace("'", '"')))
-        if negative:
-            query_data[query]["All_Negatives"].extend(json.loads(negative.replace("'", '"')))
-
+            if positive:
+                query_data[query]["All_Positivies"].extend(json.loads(positive.replace("'", '"')))
+            if negative:
+                query_data[query]["All_Negatives"].extend(json.loads(negative.replace("'", '"')))
+    except:
+        logger.error("No data in cross encoder file")
+        
     new_data = []
     for query, answers in query_data.items():
         new_data.append(
@@ -118,7 +121,7 @@ def add_sample_for_cross_encoder(df: pd.DataFrame):
 
     new_df = pd.DataFrame(new_data)
 
-    new_df.to_csv("client_data/cross_encoder_data.csv", index=False)
+    new_df.to_csv(cross_encoder_file, index=False)
 
 
 def change_user(

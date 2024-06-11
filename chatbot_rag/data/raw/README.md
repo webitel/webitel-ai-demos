@@ -1,0 +1,1 @@
+Folder for raw data with conversations in json format, may be used to extract information
