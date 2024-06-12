@@ -20,6 +20,7 @@ api_key = os.environ.get("OPENAI_API_KEY")
 data_folder = os.environ.get("DATA_FOLDER")
 faq_file = os.environ.get("FAQ_FILE")
 cross_encoder_file = os.environ.get("CROSS_ENCODER_FILE")
+openai_model = os.environ.get("OPENAI_MODEL")
 
 logname = "app.logs"
 logging.basicConfig(

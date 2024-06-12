@@ -7,7 +7,13 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
 import torch
+import os
+import dotenv
 
+dotenv.load_dotenv()
+
+device = os.getenv("DEVICE")
+print("DEVICE VECTOR", device)
 
 def init_vector_db_and_get_retriever(
     csv_path, model_name="ai-forever/sbert_large_nlu_ru"
@@ -23,7 +29,7 @@ def init_vector_db_and_get_retriever(
     docs = loader.load()
 
     embeding_model = HuggingFaceEmbeddings(
-        model_name="ai-forever/sbert_large_nlu_ru"
+        model_name="ai-forever/sbert_large_nlu_ru", device = device
     )  # "ai-forever/ruBert-large")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     splits = text_splitter.split_documents(docs)
@@ -47,7 +53,7 @@ def init_ensemble_retriever(
                 temp_docs.append(doc)
         docs = temp_docs
     embeding_model = HuggingFaceEmbeddings(
-        model_name="ai-forever/sbert_large_nlu_ru"
+        model_name="ai-forever/sbert_large_nlu_ru", model_kwargs = {"device": device}
     )  # "ai-forever/ruBert-large")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     splits = text_splitter.split_documents(docs)

@@ -16,8 +16,12 @@ import os
 
 dotenv.load_dotenv()
 
+openai_model = os.environ.get("OPENAI_MODEL")
 api_key = os.environ.get("OPENAI_API_KEY")
-print("API KEY : ", api_key)
+device = os.environ.get("DEVICE")
+print("DEVICE in chatbot", device)
+
+
 logname = 'app.logs'
 logging.basicConfig(filename=logname,
                     filemode='a',
@@ -39,7 +43,7 @@ class ParaphrasedQuery(BaseModel):
 class Reranker():
     def __init__(self, model_name="DiTy/cross-encoder-russian-msmarco"):
         #
-        self.model = CrossEncoder(model_name, max_length=512, device='cuda')#
+        self.model = CrossEncoder(model_name, max_length=512, device=device)#
     
     def get_rank(self, queries, docs):
         return self.model.rank(queries, docs)
@@ -154,14 +158,14 @@ def create_query_analyzer():
             ("human", "{question}"),
         ]
     )
-    llm = ChatOpenAI(model="gpt-4o", temperature=0,)
+    llm = ChatOpenAI(model=openai_model, temperature=0,)
     llm_with_tools = llm.bind_tools([ParaphrasedQuery])
     query_analyzer = prompt | llm_with_tools | PydanticToolsParser(tools=[ParaphrasedQuery])
     
     return query_analyzer
 
 def get_history_aware_retriever(retriever):
-    llm = ChatOpenAI(model="gpt-4o",)
+    llm = ChatOpenAI(model=openai_model)
     contextualize_q_system_prompt = load_prompt('prompts/history_aware_retriever_prompt.txt')
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
@@ -176,7 +180,7 @@ def get_history_aware_retriever(retriever):
     return history_aware_retriever
 
 def create_question_answer_chain(full_name=None, contract=None, overdue=None, phone= None, debt= None,startDate= None,dueDate= None):
-    llm = ChatOpenAI(model="gpt-4o",temperature=0.4)
+    llm = ChatOpenAI(model=openai_model,temperature=0.4)
     currentDate = datetime.today().strftime('%Y-%m-%d')
     prefix = load_prompt('prompts/question_answer_chain.txt')
     prefix = prefix.format(full_name=full_name, contract=contract, overdue=overdue, phone=phone, debt=debt,startDate=startDate,dueDate=dueDate,currentDate=currentDate)
@@ -198,7 +202,7 @@ def create_question_answer_chain(full_name=None, contract=None, overdue=None, ph
     return question_answer_chain
 
 def refiner():
-    llm = ChatOpenAI(model="gpt-4o",)
+    llm = ChatOpenAI(model=openai_model,)
     
     refiner_prompt = """You are an assistant for Miloan company to help users with their queries.
     You will receive AI response, context and chat history you aim is to refine the AI response to make it more natural and accurate.
@@ -235,7 +239,7 @@ def create_reranker():
     return Reranker()
 
 def generate_questions(question, answer):
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.4,)
+    llm = ChatOpenAI(model=openai_model, temperature=0.4,)
 
 
     template = load_prompt('prompts/generate_similar_questions_prompt.txt')
