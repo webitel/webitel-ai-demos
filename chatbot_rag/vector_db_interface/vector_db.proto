@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package vector_db;
+
+
+message Article{
+  // article id
+  string id = 1;
+
+  // article content
+  string content = 2;
+
+  // article categories
+  repeated string categories = 3;
+}
+
+
+service VectorDBService {
+  rpc AddArticles(AddArticlesRequest) returns (AddArticlesResponse);
+  rpc GetArticles(GetArticlesRequest) returns (GetArticlesResponse);
+  rpc RemoveArticles(RemoveArticlesRequest) returns (RemoveArticlesResponse);
+  rpc UpdateArticles(UpdateArticlesRequest) returns (UpdateArticlesResponse);
+}
+
+message AddArticlesRequest {
+  repeated Article articles = 1;
+}
+
+message AddArticlesResponse{
+  // created ids in db
+  repeated string id = 1;
+  // response from db
+  string response_message = 2;
+
+}
+
+message RemoveArticlesRequest{
+  // article id
+  repeated string id = 1;
+}
+
+message RemoveArticlesResponse{
+
+  repeated string id = 1;
+  // response from db
+  string response_message = 2;
+}
+
+message GetArticlesRequest{
+  // article id
+  repeated string id = 1;
+
+  // categories from DB
+  repeated string categories = 2;
+}
+
+message GetArticlesResponse{
+  // response from db
+  repeated Article articles = 1;
+}
+
+message UpdateArticlesRequest{
+  repeated Article articles = 1;
+}
+
+message UpdateArticlesResponse{
+  // updated ids in db
+  repeated string id = 1;
+  // response from db
+  string response_message = 2;
+}
