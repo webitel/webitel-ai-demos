@@ -64,8 +64,6 @@ message UpdateArticlesRequest{
 }
 
 message UpdateArticlesResponse{
-  // updated ids in db
-  repeated string id = 1;
   // response from db
-  string response_message = 2;
+  string response_message = 1;
 }

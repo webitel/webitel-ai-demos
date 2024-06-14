@@ -1,0 +1,17 @@
+{
+    "class": "KnowledgeBase",
+    "description": "A collection of articles which are used as a Knowledge Base for RAG",
+    "vectorizer": "none",
+    "properties": [
+    {
+        "name": "content",
+        "description": "Contents of the article",
+        "dataType": ["text"]
+    },
+    {
+        "name": "categories",
+        "description": "Categories of the article",
+        "dataType": ["text[]"]
+    }
+    ]
+}

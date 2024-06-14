@@ -2,6 +2,7 @@
 app.logs
 *.csv
 *.json
+!vector_db.json
 env/
 output/
 

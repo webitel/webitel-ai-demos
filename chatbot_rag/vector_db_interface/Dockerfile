@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN pip install langchain_milvus langchain_community
 # Copy the application code
+
+RUN pip install weaviate-client
 COPY . .
 
 #Generate grcp files
