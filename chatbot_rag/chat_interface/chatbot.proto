@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package chatbot;
+
+service ChatService {
+    rpc Message(MessageRequest) returns (MessageResponse);
+    }
+
+message MessageRequest {
+    // customer specified metadata
+    map<string,string> input = 1;
+
+    // model to use
+    string model = 2;
+
+    // categories from DB to use
+    repeated string categories = 3;
+
+    // history length 
+    int32 history_length = 4;
+
+    // timeout in ms
+    int32 timeout = 15000;
+
+    // model endpoint 
+    string endpoint = 6;
+}
+
+message MessageResponse {
+    // response from ai
+    string response_message = 1;
+
+    // categories used while generating the response 
+    repeated string used_categories = 2;
+}
