@@ -1,3 +1,7 @@
-OPENAI_API_KEY = "API_KEY"
-FAQ_FILE = "./data/processed/faq.csv"
+OPENAI_API_KEY = "sk-..."
 CROSS_ENCODER_FILE = "./data/processed/cross_encoder.csv"
+OPENAI_MODEL = 'gpt-4o'
+DEVICE = "cpu"
+GRPC_PORT = 50051
+HTTP_PORT = 8080
+HOST = "weaviate"
