@@ -3,27 +3,26 @@ syntax = "proto3";
 package chatbot;
 
 service ChatService {
-    rpc Message(MessageRequest) returns (MessageResponse);
+    rpc Answer(MessageRequest) returns (MessageResponse);
     }
+
+message Message{
+    string message = 1;
+    string sender = 2;
+}
 
 message MessageRequest {
     // customer specified metadata
-    map<string,string> input = 1;
-
-    // model to use
-    string model = 2;
+    map<string,string> user_metadata = 1;
 
     // categories from DB to use
-    repeated string categories = 3;
+    repeated string categories = 2;
 
-    // history length 
-    int32 history_length = 4;
+    // messages between user and AI, old messages first, new messages last
+    repeated Message messages = 3;
 
     // timeout in ms
-    int32 timeout = 15000;
-
-    // model endpoint 
-    string endpoint = 6;
+    int32 timeout = 4;
 }
 
 message MessageResponse {
@@ -32,4 +31,7 @@ message MessageResponse {
 
     // categories used while generating the response 
     repeated string used_categories = 2;
+
+    // used document ids
+    repeated string used_document_ids = 3;
 }

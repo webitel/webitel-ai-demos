@@ -3,6 +3,5 @@ huggingface==0.0.1
 huggingface-hub==0.23.3
 grpcio==1.63.0
 grpcio-tools==1.63.0
-langchain_milvus
-langchain_community
-weaviate-client
+langchain-community==0.2.4
+weaviate-client==4.6.4

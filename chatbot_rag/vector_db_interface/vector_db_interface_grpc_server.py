@@ -4,14 +4,17 @@ import grpc
 from concurrent import futures
 from vector_db_weaviate import VectorDatabase
 import logging
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 
-
+host = os.getenv('HOST')
+http_port = int(os.getenv('HTTP_PORT'))
+        
 class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
     def __init__(self):
         logging.log(logging.DEBUG, "Server: __init__")
-        self.db = VectorDatabase(host="weaviate", port=8080)
+        self.db = VectorDatabase(host=host, port=http_port)
         logging.log(logging.DEBUG, "Server: __init__ done")
 
     def AddArticles(self, request, context):

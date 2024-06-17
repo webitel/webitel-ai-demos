@@ -13,14 +13,10 @@ COPY requirements.txt .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install langchain_milvus langchain_community
-# Copy the application code
-
-RUN pip install weaviate-client
 COPY . .
 
 #Generate grcp files
-RUN python -m grpc_tools.protoc -I .   --python_out=. --grpc_python_out=.   vector_db.proto
+RUN ./generate_grpc.sh
 
 # Set the entrypoint command
 CMD ["python", "vector_db_interface_grpc_server.py"]

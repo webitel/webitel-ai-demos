@@ -1,1 +1,15 @@
-weaviate-client
+grpcio==1.64.1
+grpcio-health-checking==1.64.1
+grpcio-tools==1.63.0
+huggingface==0.0.1
+huggingface-hub==0.23.3
+langchain-weaviate==0.0.2
+langchain-openai==0.1.8
+langchain==0.2.3
+rank-bm25==0.2.2
+sentence-transformers==3.0.1
+transformers==4.41.2
+weaviate-client==4.6.4
+tenacity==8.3.0 
+langchain-community==0.2.4
+python-dotenv==1.0.1

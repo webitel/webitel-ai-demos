@@ -33,8 +33,20 @@ services:
     container_name: vector-db-interface
     build: 
       context: ./vector_db_interface
+    env_file: .env
     ports:
       - "50053:50051"
+    depends_on:
+      - "weaviate"
+    restart: always
+  
+  chat_interface:
+    container_name: chat-interface
+    build: 
+      context: ./chat_interface
+    env_file: .env
+    ports:
+      - "50055:50055"
     depends_on:
       - "weaviate"
     restart: always

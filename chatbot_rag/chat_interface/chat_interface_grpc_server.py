@@ -1,63 +1,54 @@
-import vector_db_pb2
-import vector_db_pb2_grpc
+import chatbot_pb2
+import chatbot_pb2_grpc
 import grpc
 from concurrent import futures
-from vector_db import VectorDatabase
+from chatbot import ChatBot
 
 
-class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
+class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
     def __init__(self):
-        self.db = VectorDatabase(connection_uri="http://standalone:19530")
+        self.chatbot  = ChatBot()
 
-    def AddArticles(self, request, context):
-        contents = []
-        categories = []
-        for article in request.articles:
-            contents.append(article.content)
-            categories.append(article.categories)
-
-        res_insert, new_ids = self.db.insert(contents, categories)
-
-        if res_insert.succ_count == len(contents):
-            message = "All articles inserted successfully"
-        else:
-            message = "Some articles failed to insert"
-
-        return vector_db_pb2.AddArticlesResponse(id=new_ids,response_message=message)
-
-    def GetArticles(self, request, context):
-        res = self.db.get_articles(request.id, request.categories)
-        articles = []
-        for article in res :
-            articles.append(vector_db_pb2.Article(id=article['doc_id'], content=article['text'], categories=article['category']))
-        return vector_db_pb2.GetArticlesResponse(articles=articles)
-    
-    def RemoveArticles(self, request, context):
-        res = self.db.remove(request.id)
-        if res.delete_count == len(request.id):
-            message = "Articles removed successfully"
-        else:
-            message = "Some articles were not deleted"
-        return vector_db_pb2.RemoveArticlesResponse(id = request.id, response_message=message)
-    
-    def UpdateArticles(self,request, context):
-        ids = []
-        contents = []
-        categories = []
-        for article in request.articles:
-            ids.append(article.id)
-            contents.append(article.content)
-            categories.append(article.categories)
-        res = self.db.upsert(ids, contents, categories)
-        print(res)
+    def Answer(self, request, context):
+        chat_history = []
+        input_query = ""
+        timeout = request.timeout
+        user_metadata = request.user_metadata
         
-        return vector_db_pb2.UpdateArticlesResponse(id=request.id)
+        last_message = ""
+        last_sender = ""
+        for i,message in enumerate(request.messages):
+            
+            if last_sender != message.sender and last_sender != "":
+                chat_history.append((last_sender,last_message))
+                last_message = ""
+
+            last_message += ' '+ message.message
+            last_sender = message.sender
+
+        input_query = last_message
+        def execute_chatbot():
+            answer, used_docs = self.chatbot.answer(input_query, chat_history, **user_metadata)
+            return answer, used_docs
+        
+
+        answer, used_documents = execute_chatbot()
+
+        used_categories = []
+        used_document_ids = []
+        for doc in used_documents:
+            used_document_ids.append(doc.metadata.get("uuid",[]))
+            used_categories.extend(doc.metadata.get("categories",[]))
+
+        return chatbot_pb2.MessageResponse(response_message=answer,used_categories=list(set(used_categories)),
+                                        used_document_ids = list(set(used_document_ids)))
+
 
     
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    vector_db_pb2_grpc.add_VectorDBServiceServicer_to_server(VectorDBServiceServicer(), server)
-    server.add_insecure_port('0.0.0.0:50051')
+    chatbot_pb2_grpc.add_ChatServiceServicer_to_server(ChatServiceServicer(), server)
+    server.add_insecure_port('0.0.0.0:50055')
     server.start()
     server.wait_for_termination()
     

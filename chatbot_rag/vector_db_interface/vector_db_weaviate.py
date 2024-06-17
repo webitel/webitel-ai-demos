@@ -3,13 +3,20 @@ from weaviate.classes.query import Filter
 import json
 from langchain_community.embeddings import HuggingFaceEmbeddings
 import functools
+import os
+
+openai_model = os.environ.get("OPENAI_MODEL")
+device = os.environ.get("DEVICE")
+db_host = os.environ.get("HOST")
+http_port = int(os.environ.get("HTTP_PORT"))
+grpc_port = int(os.environ.get("GRPC_PORT"))
 
 class VectorDatabase():
     def __init__(self, host, port):
         self.host = host
         self.port = port
         self.dense_embedding_func = HuggingFaceEmbeddings(
-            model_name="ai-forever/sbert_large_nlu_ru", model_kwargs = {"device": 'cpu'}
+            model_name="ai-forever/sbert_large_nlu_ru", model_kwargs = {"device": device}
         )
         with weaviate.connect_to_local(host=host,port=port) as client:
             while not client.is_ready():
