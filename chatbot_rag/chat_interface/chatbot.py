@@ -1,6 +1,6 @@
 import weaviate
 import numpy as np
-
+from weaviate.classes.query import Filter
 from langchain_weaviate import WeaviateVectorStore
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from sentence_transformers import CrossEncoder
@@ -10,10 +10,21 @@ from langchain.output_parsers import PydanticToolsParser
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
 import os
-from utils import load_prompt
+from utils import load_prompt, load_model
 
+import logging
+import contextlib
+
+@contextlib.contextmanager
+def timeout_context_manager(context):
+    try:
+        yield
+    finally:
+        if context.time_remaining() <= 0:
+            raise TimeoutError("Timeout")
+
+logging.basicConfig(level=logging.INFO)
 
 
 openai_model = os.environ.get("OPENAI_MODEL")
@@ -24,9 +35,15 @@ grpc_port = int(os.environ.get("GRPC_PORT"))
 
 class Reranker():
     def __init__(self, model_name="DiTy/cross-encoder-russian-msmarco"):
-        self.model = CrossEncoder(model_name, max_length=512, device=device)#
+        if model_name == "DiTy/cross-encoder-russian-msmarco" or model_name == "default" or model_name == "":
+            self.model = CrossEncoder('DiTy/cross-encoder-russian-msmarco', max_length=512, device=device)
+        else:
+            logging.info(f"Loaded model {model_name} from minio")
+            self.model = load_model(model_name,device,'chatbot-rag','minioroot','miniopassword','minio:9000') #
     
     def get_rank(self, queries, docs):
+        print(queries, docs)
+        logging.info(f"Ranking {queries} queries and {docs} documents")
         return self.model.rank(queries, docs)
     
 class ChatBot():
@@ -36,6 +53,7 @@ class ChatBot():
             model_name="ai-forever/sbert_large_nlu_ru", model_kwargs = {"device": device}
         )
         self.reranker = Reranker(reranker_model)
+        self.reranker_name = reranker_model
         self.query_analyzer = create_query_analyzer()
         self.qa_chain = create_question_answer_chain()
         
@@ -48,50 +66,75 @@ class ChatBot():
             ))
         self.client.connect()
         self.retriever = WeaviateVectorStore(self.client, attributes=['categories'], text_key = 'content', index_name=collection_name, embedding=self.embedding_model)
-        self.client.close()
 
-    def retrieve(self,query):
+    def retrieve(self,query,categories):
         vector = self.embedding_model.embed_documents([query])[0]
         kwargs= {'return_uuids':True,
                 'vector':vector,
-                'alpha':0.5 # 1 - pure vector search, 0 - pure keyword search
+                'alpha':0.5, # 1 - pure vector search, 0 - pure keyword search,
+                'filters':Filter.by_property("categories").contains_all(categories)
                 }
         return self.retriever.similarity_search(query=query,k=10,**kwargs)
     
-    def answer(self, input_query, chat_history, **kwargs):
-        self.client.connect()
+    def answer(self, input_query, chat_history,categories,context,timeout, **kwargs):
+        try:
+            with timeout_context_manager(context):
+                
+                self.qa_chain = create_question_answer_chain(**kwargs)
+                
+                # if there are no categories reply without context
+                if len(categories) == 0: 
+                    answer = self.qa_chain.invoke({"input": input_query, "context": [], "chat_history": chat_history})
+                    return answer, []
+
+                logging.info(f"Categories: {categories}")
+                
+            with timeout_context_manager(context):
+                # 1. generate new queries 
+                new_queries = self.query_analyzer.invoke({"question": input_query})
+                new_queries.append(ParaphrasedQuery(paraphrased_query=input_query))
+                
+                logging.info(f"New queries: {new_queries}")
+                
+            with timeout_context_manager(context):
+                # 2. retrieve documents
+                context_docs = []
+                for query in new_queries:
+                    context_docs.extend(self.retrieve(query.paraphrased_query, categories))
+                
+                logging.info(f"Retrieved docs: {context_docs}")
+
+                # 3. remove duplicates
+                deduped_docs = []
+                for doc in context_docs:
+                    if doc not in deduped_docs:
+                        deduped_docs.append(doc)
+                        
+            with timeout_context_manager(context):
+                if len(deduped_docs) != 0:
+                    # 4. rerank documents and select best 5 
+                    ranks = self.reranker.get_rank(input_query, [doc.page_content for doc in deduped_docs])
+                    best_ranked_docs = [deduped_docs[rank['corpus_id']] for rank in ranks[:5]]
+
+                    logging.info(f"Used docs: {best_ranked_docs}")
+                    answer = self.qa_chain.invoke({"input": input_query, "context": best_ranked_docs, "chat_history": chat_history})
+                else:
+                    answer = self.qa_chain.invoke({"input": input_query, "context": [], "chat_history": chat_history})
+
+                return answer, best_ranked_docs if 'best_ranked_docs' in locals() else []
         
-        self.qa_chain = create_question_answer_chain(**kwargs)
+        except TimeoutError as e:
+            logging.error(f"Timeout occurred in answer method: {str(e)}")
+            raise e  # Propagate the TimeoutError to handle it appropriately at a higher level
         
-        
-        #1. generate new queries 
-        new_queries = self.query_analyzer.invoke({"question":input_query})
-        new_queries.append(ParaphrasedQuery(paraphrased_query=input_query))
-        
-        #2. retrieve documents
-        context_docs = []
-        for query in new_queries:
-            # context_docs.extend(self.history_aware_retriever.invoke({"input":prefix_query + query.paraphrased_query,"chat_history":chat_history}))
-            # context_docs.extend(self.history_aware_retriever.invoke({"input":query.paraphrased_query,"chat_history":chat_history}))
-            context_docs.extend(self.retrieve(query.paraphrased_query))
-            
-        #3. remove duplicates (at least partially)
-        deduped_docs = []
-        for doc in context_docs:
-            if doc not in deduped_docs:
-                deduped_docs.append(doc)    
-        
-        #3. rerank documents and select best 5 
-        ranks = self.reranker.get_rank(input_query, [doc.page_content for doc in deduped_docs])
-        best_ranked_docs = []
-        for rank in ranks[:5]:
-            best_ranked_docs.append(deduped_docs[rank['corpus_id']])
-        
-        answer = self.qa_chain.invoke({"input":input_query,"context":best_ranked_docs, "chat_history":chat_history})
-        
-        self.client.close()
-        return answer,best_ranked_docs
+        except Exception as e:
+            logging.error(f"Exception occurred in answer method: {str(e)}")
+            raise e  # Handle other exceptions according to your application's error handling strategy
+
     
+    def reload_reranker_model(self,model_name):
+        self.reranker = Reranker(model_name)
+        self.reranker_name = model_name
 
 class ParaphrasedQuery(BaseModel):
     """You have performed query expansion to generate a paraphrasing of a question."""

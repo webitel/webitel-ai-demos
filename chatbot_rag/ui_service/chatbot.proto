@@ -23,9 +23,6 @@ message MessageRequest {
 
     // timeout in ms
     int32 timeout = 4;
-
-    // model to use
-    string model_name = 5;
 }
 
 message MessageResponse {

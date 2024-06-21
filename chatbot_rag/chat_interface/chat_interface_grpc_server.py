@@ -4,7 +4,6 @@ import grpc
 from concurrent import futures
 from chatbot import ChatBot
 
-
 class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
     def __init__(self):
         self.chatbot  = ChatBot()
@@ -13,7 +12,10 @@ class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
         chat_history = []
         input_query = ""
         timeout = request.timeout
+        categories = request.categories
         user_metadata = request.user_metadata
+        if request.model_name != self.chatbot.reranker_name:
+            self.chatbot.reload_reranker_model(request.model_name)
         
         last_message = ""
         last_sender = ""
@@ -27,13 +29,10 @@ class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
             last_sender = message.sender
 
         input_query = last_message
-        def execute_chatbot():
-            answer, used_docs = self.chatbot.answer(input_query, chat_history, **user_metadata)
-            return answer, used_docs
-        
-
-        answer, used_documents = execute_chatbot()
-
+        try:
+            answer, used_documents = self.chatbot.answer(input_query, chat_history, categories,context,timeout, **user_metadata)
+        except TimeoutError as e:
+            context.abort(grpc.StatusCode.DEADLINE_EXCEEDED, f"Timeout occurred in answer method: {str(e)}")
         used_categories = []
         used_document_ids = []
         for doc in used_documents:

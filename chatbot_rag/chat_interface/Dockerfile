@@ -15,6 +15,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN pip install minio
+
+RUN pip install stopit
+
 #Generate grcp files
 RUN ./generate_grpc.sh
 

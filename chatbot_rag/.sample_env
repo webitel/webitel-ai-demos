@@ -1,7 +1,12 @@
-OPENAI_API_KEY = "sk-..."
+OPENAI_API_KEY = "sk-"
 CROSS_ENCODER_FILE = "./data/processed/cross_encoder.csv"
 OPENAI_MODEL = 'gpt-4o'
 DEVICE = "cpu"
 GRPC_PORT = 50051
 HTTP_PORT = 8080
 HOST = "weaviate"
+MINIO_ROOT_USER= "minioroot"
+MINIO_ROOT_PASSWORD= "miniopassword"
+MINIO_DEFAULT_BUCKETS= "chatbot-rag"
+MINIO_URL = "minio:9000"
+PYTHONUNBUFFERED=1
