@@ -5,28 +5,15 @@ This is demo project for chatbot utilizing RAG as main knowledge source.
 Python version 3.11.2
 OS: Debian GNU/Linux 12 (bookworm)
 
-## Install requirements
+## Installation
 
-```
-python -m venv env
+1. Get OpenAI key - [link](https://platform.openai.com/docs/overview)
 
-source env/bin/activate
+2. Install docker, docker-compose - [link](https://docs.docker.com/compose/)
 
-pip install -r requirements.txt 
-```
+3. Install nvidia-container-toolkit, which is required for training Cross Encoder model using GPU in docker container - [link](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/1.15.0/install-guide.html)
 
-## Run app
+4. Copy .env file from .sample_env and paste your OpenAI key.
 
-
-# You might need to reload nvidia modules
-```
-sudo rmmod nvidia_uvm
-sudo rmmod nvidia
-sudo modprobe nvidia
-sudo modprobe nvidia_uvm
-```
-
-
-```
-python ui.py
+5. After all this steps you should be able to run `docker compose up` to run whole project. 
 ```
