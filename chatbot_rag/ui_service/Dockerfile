@@ -26,4 +26,4 @@ COPY . /app
 EXPOSE 7860
 
 # Run ui when the container launches
-CMD ["python", "ui_new.py"]
+CMD ["python", "ui.py"]

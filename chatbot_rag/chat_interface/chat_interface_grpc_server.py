@@ -1,8 +1,10 @@
+from concurrent import futures
+
 import chatbot_pb2
 import chatbot_pb2_grpc
 import grpc
-from concurrent import futures
 from chatbot import ChatBot
+
 
 class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
     def __init__(self):

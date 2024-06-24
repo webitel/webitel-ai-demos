@@ -1,6 +1,5 @@
 version: '3.4'
 
-
 volumes:
   weaviate_data:
   minio_data:
@@ -26,7 +25,6 @@ services:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'none'
-      # ENABLE_MODULES: 'text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai'
       CLUSTER_HOSTNAME: 'node1'
     
   minio:
@@ -60,15 +58,18 @@ services:
     restart: always
   
   chat_interface:
-    container_name: chat-interface
     build: 
       context: ./chat_interface
     env_file: .env
     ports:
-      - "50055:50055"
+      - "50055-50056:50055"
     depends_on:
       - "weaviate"
     restart: always
+    deploy:
+      mode: replicated
+      replicas: 2
+      endpoint_mode: vip
 
   ui_service:
     container_name: ui-service
@@ -89,3 +90,13 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+  
+  nginx:
+      image: nginx:latest
+      ports:
+        - "8081:8080"  # Expose nginx on port 8080 of the host
+      volumes:
+        - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Mount custom nginx configuration
+      depends_on:
+      - "chat_interface"
+      restart: always

@@ -8,7 +8,7 @@ import chatbot_pb2
 import chatbot_pb2_grpc
 
 # gRPC channel setup
-channel = grpc.insecure_channel('localhost:50055')
+channel = grpc.insecure_channel('localhost:8081')
 stub = chatbot_pb2_grpc.ChatServiceStub(channel)
 
 # Test parameters
@@ -100,3 +100,10 @@ if __name__ == '__main__':
 # Min time: 10.55447006225586 seconds
 # Std time: 1.1635044961861212 seconds
 # Total time taken: 17.11190891265869 seconds
+
+# with 10 threads and 22 concurrent messages; two replicas
+# Average time: 11.075560136274857 seconds
+# Max time: 18.76432704925537 seconds
+# Min time: 4.980943441390991 seconds
+# Std time: 4.538760932072202 seconds
+# Total time taken: 18.791161060333252 seconds

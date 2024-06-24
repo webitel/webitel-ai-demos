@@ -20,9 +20,7 @@ def load_model(model_name,device,bucket_name,access_key,secret_key,minio_url):
                         secret_key=secret_key,
                         secure=False)
     
-    # client.fget_object('chatbot-rag', model_name, model_name)
-    
-    if len(os.listdir(reranker_models_path)) > 3:
+    if os.path.exists(reranker_models_path) and len(os.listdir(reranker_models_path)) > 3:
         ## remove oldest folder
         dirs = [_dir for _dir in os.listdir(reranker_models_path)]
         sorted_dirs = list(sorted(dirs, key=lambda x: os.stat(os.path.join(reranker_models_path,x)).st_mtime))
