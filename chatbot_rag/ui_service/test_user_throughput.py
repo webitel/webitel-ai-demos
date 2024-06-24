@@ -63,3 +63,40 @@ if __name__ == '__main__':
     end_time = time.time()
     
     print(f"Total time taken: {end_time - start_general} seconds")
+
+
+# with 1 thread and 22 concurrent messages 
+# Average time: 43.925138516859576 seconds
+# Max time: 78.52218389511108 seconds
+# Min time: 4.152154207229614 seconds
+# Std time: 21.07320392091566 seconds
+# Total time taken: 78.54210901260376 seconds
+
+
+# with 10 threads and 22 concurrent messages 
+# Average time: 16.30094156482003 seconds
+# Max time: 22.422840118408203 seconds
+# Min time: 4.616497278213501 seconds
+# Std time: 4.161973605894377 seconds
+# Total time taken: 22.430484294891357 seconds
+
+# with 10 threads and 22 concurrent messages; second run
+# Average time: 12.674482800743796 seconds
+# Max time: 17.94372844696045 seconds
+# Min time: 3.954347848892212 seconds
+# Std time: 3.717238810535901 seconds
+# Total time taken: 17.96164035797119 seconds
+
+# with 22 threads and 22 concurrent messages 
+# Average time: 26.19019732692025 seconds
+# Max time: 31.661612033843994 seconds
+# Min time: 6.172985553741455 seconds
+# Std time: 8.134393090002066 seconds
+# Total time taken: 31.690311193466187 seconds
+
+# with 22 threads and 22 concurrent messages; second run
+# Average time: 12.871224240823226 seconds
+# Max time: 17.083094358444214 seconds
+# Min time: 10.55447006225586 seconds
+# Std time: 1.1635044961861212 seconds
+# Total time taken: 17.11190891265869 seconds

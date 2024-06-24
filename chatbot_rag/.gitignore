@@ -5,6 +5,7 @@ app.logs
 !vector_db.json
 env/
 output/
+volumes/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

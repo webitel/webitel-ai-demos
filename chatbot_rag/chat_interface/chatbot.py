@@ -32,14 +32,17 @@ device = os.environ.get("DEVICE")
 db_host = os.environ.get("HOST")
 http_port = int(os.environ.get("HTTP_PORT"))
 grpc_port = int(os.environ.get("GRPC_PORT"))
-
+minio_root_user = os.environ.get("MINIO_ROOT_USER")
+minio_root_password = os.environ.get("MINIO_ROOT_PASSWORD")
+minio_default_bucket = os.environ.get("MINIO_DEFAULT_BUCKETS")
+minio_url = os.environ.get("MINIO_URL")
 class Reranker():
     def __init__(self, model_name="DiTy/cross-encoder-russian-msmarco"):
         if model_name == "DiTy/cross-encoder-russian-msmarco" or model_name == "default" or model_name == "":
             self.model = CrossEncoder('DiTy/cross-encoder-russian-msmarco', max_length=512, device=device)
         else:
             logging.info(f"Loaded model {model_name} from minio")
-            self.model = load_model(model_name,device,'chatbot-rag','minioroot','miniopassword','minio:9000') #
+            self.model = load_model(model_name,device,minio_default_bucket,minio_root_user,minio_root_password,minio_url) #
     
     def get_rank(self, queries, docs):
         print(queries, docs)
@@ -76,7 +79,7 @@ class ChatBot():
                 }
         return self.retriever.similarity_search(query=query,k=10,**kwargs)
     
-    def answer(self, input_query, chat_history,categories,context,timeout, **kwargs):
+    def answer(self, input_query, chat_history,categories,context, **kwargs):
         try:
             with timeout_context_manager(context):
                 

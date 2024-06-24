@@ -11,7 +11,6 @@ class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
     def Answer(self, request, context):
         chat_history = []
         input_query = ""
-        timeout = request.timeout
         categories = request.categories
         user_metadata = request.user_metadata
         if request.model_name != self.chatbot.reranker_name:
@@ -30,7 +29,7 @@ class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
 
         input_query = last_message
         try:
-            answer, used_documents = self.chatbot.answer(input_query, chat_history, categories,context,timeout, **user_metadata)
+            answer, used_documents = self.chatbot.answer(input_query, chat_history, categories,context, **user_metadata)
         except TimeoutError as e:
             context.abort(grpc.StatusCode.DEADLINE_EXCEEDED, f"Timeout occurred in answer method: {str(e)}")
         used_categories = []

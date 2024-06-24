@@ -21,11 +21,8 @@ message MessageRequest {
     // messages between user and AI, old messages first, new messages last
     repeated Message messages = 3;
 
-    // timeout in ms
-    int32 timeout = 4;
-
     // model to use
-    string model_name = 5;
+    string model_name = 4;
 }
 
 message MessageResponse {

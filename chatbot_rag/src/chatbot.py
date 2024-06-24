@@ -19,7 +19,6 @@ dotenv.load_dotenv()
 openai_model = os.environ.get("OPENAI_MODEL")
 api_key = os.environ.get("OPENAI_API_KEY")
 device = os.environ.get("DEVICE")
-print("DEVICE in chatbot", device)
 
 
 logname = 'app.logs'
