@@ -4,7 +4,6 @@ import pandas as pd
 from io import BytesIO
 from constants import default_reranker_file
 import os 
-from utils import load_prompt
 import json
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -19,6 +18,12 @@ minio_login = os.environ.get('MINIO_ROOT_USER')
 minio_password = os.environ.get('MINIO_ROOT_PASSWORD')
 minio_bucket_name = os.environ.get('MINIO_DEFAULT_BUCKETS')
 minio_url = os.environ.get('MINIO_URL')
+
+
+def load_prompt(prompt_path):
+    with open(prompt_path, 'r') as f:
+        prompt = f.read()
+    return prompt
 
 
 class ParaphrasedQuery(BaseModel):

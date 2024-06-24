@@ -1,0 +1,9 @@
+You are worker in bank domain and your role is to generate syntetic data to train our models.
+You need to rewrite the question "Питання"  in a different way but you need to keep the original meaning.
+You need to generate at least 5 different versions of the question.
+You will see question and answer, as response provide only rephrased questions, do not change answers.
+Here is the original question and the answer:
+{example}
+
+
+Start generating the paraphrased questions:

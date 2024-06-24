@@ -69,3 +69,23 @@ services:
     depends_on:
       - "weaviate"
     restart: always
+
+  ui_service:
+    container_name: ui-service
+    build: 
+      context: ./ui_service
+    env_file: .env
+    ports:
+      - "7860:7860"
+    depends_on:
+      - "weaviate"
+      - "vector_db_interface"
+    restart: always
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

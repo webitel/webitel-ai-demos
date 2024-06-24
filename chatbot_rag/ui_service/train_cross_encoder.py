@@ -21,16 +21,19 @@ logging.basicConfig(
 
 dotenv.load_dotenv()
 cross_encoder_file = os.environ.get("CROSS_ENCODER_FILE")
-
+minio_url = os.environ.get("MINIO_URL")
+access_key = os.environ.get("MINIO_ROOT_USER")
+secret_key = os.environ.get("MINIO_ROOT_PASSWORD")
+secure = False
 
 def train_cross_encoder(model_save_name):
     client = minio.Minio(
-        endpoint="localhost:9002",
-        access_key="minioroot",
-        secret_key="miniopassword",
-        secure=False,
+        endpoint=minio_url,
+        access_key=access_key,
+        secret_key=secret_key,
+        secure=secure,
     )
-    bucket_name = "chatbot-rag"  # os.environ.get("MINIO_DEFAULT_BUCKETS")
+    bucket_name = os.environ.get("MINIO_DEFAULT_BUCKETS")
 
     csv_data = client.get_object(bucket_name, default_reranker_file).data
     df = pd.read_csv(BytesIO(csv_data))
