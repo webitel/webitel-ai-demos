@@ -111,3 +111,12 @@ services:
     - "8000:8000"
     - "8088:8088" # for dashboard
     restart: always
+
+  translation_service:
+    container_name: translation_service
+    build: 
+      context: ./translation_service
+    env_file: .env
+    ports:
+    - "8251:8000"
+    restart: always
