@@ -1,6 +1,7 @@
 import contextlib
 import logging
 import os
+import requests
 
 import weaviate
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -92,11 +93,16 @@ class ChatBot:
             attributes=["categories"],
             text_key="content",
             index_name=collection_name,
-            embedding=self.embedding_model,
+            embedding=self.get_embedding,
         )
-
+        
+    def get_embedding(self, text):
+        response = requests.post("http://embedding_service:8000/embeddings", json={"text": text})
+        vector = response.json()["embedding"]#self.embedding_model.embed_documents([query])[0]
+        return vector
+    
     def retrieve(self, query, categories):
-        vector = self.embedding_model.embed_documents([query])[0]
+        vector = self.get_embedding(query)
         kwargs = {
             "return_uuids": True,
             "vector": vector,
