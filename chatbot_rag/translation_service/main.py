@@ -57,7 +57,7 @@ device = 'cpu'
 async def get_embeddings(request: Request):
     data = await request.json()
     text = data['text']
-    translation = translate_m2m(text)
+    translation = translate_m2m(text)[0]
     # if 'facebook' in model_name:
     #     translation = translate_facebook(text, 'uk', 'rus_Cyrl')
     # else:

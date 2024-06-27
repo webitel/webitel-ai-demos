@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from io import BytesIO
+import requests
 
 import minio
 import pandas as pd
@@ -19,7 +20,14 @@ minio_login = os.environ.get("MINIO_ROOT_USER")
 minio_password = os.environ.get("MINIO_ROOT_PASSWORD")
 minio_bucket_name = os.environ.get("MINIO_DEFAULT_BUCKETS")
 minio_url = os.environ.get("MINIO_URL")
+TRANSLATION_HOST = os.environ.get("TRANSLATION_HOST")
+TRANSLATION_PORT = os.environ.get("TRANSLATION_PORT")
 
+
+
+def translate_text(text):
+    response = requests.post(f"http://{TRANSLATION_HOST}:{TRANSLATION_PORT}/translate", json={"text": text})
+    return response.json()["translation"]
 
 def load_prompt(prompt_path):
     with open(prompt_path, "r") as f:
@@ -36,7 +44,7 @@ class ParaphrasedQuery(BaseModel):
     )
 
 
-def generate_questions(question, answer):
+def generate_questions(question, answer, translate):
     llm = ChatOpenAI(
         model=openai_model,
         temperature=0.4,
@@ -56,6 +64,10 @@ def generate_questions(question, answer):
             "paraphrased_query"
         ]
         generated_questions += f"Q{i}: {generated_question} \n"
+
+        if translate:
+            generated_questions +=f"Q{i}: {translate_text(generated_question)}\n" 
+    
     return generated_questions
 
 

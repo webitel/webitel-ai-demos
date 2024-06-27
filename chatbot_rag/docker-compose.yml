@@ -3,6 +3,8 @@ version: '3.4'
 volumes:
   weaviate_data:
   minio_data:
+  translation_model_data:  # Define volume for translation service model data
+  embedding_model_data: 
 
 services:
   weaviate:
@@ -111,7 +113,9 @@ services:
     - "8000:8000"
     - "8088:8088" # for dashboard
     restart: always
-
+    volumes:
+      - embedding_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data
+  
   translation_service:
     container_name: translation_service
     build: 
@@ -120,3 +124,5 @@ services:
     ports:
     - "8251:8000"
     restart: always
+    volumes:
+      - translation_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data

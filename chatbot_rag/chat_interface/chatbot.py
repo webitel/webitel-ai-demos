@@ -69,9 +69,9 @@ class Reranker:
 class ChatBot:
     def __init__(self, reranker_model="DiTy/cross-encoder-russian-msmarco"):
         collection_name = "KnowledgeBase"
-        self.embedding_model = HuggingFaceEmbeddings(
-            model_name="ai-forever/sbert_large_nlu_ru", model_kwargs={"device": device}
-        )
+        # self.embedding_model = HuggingFaceEmbeddings(
+        #     model_name="ai-forever/sbert_large_nlu_ru", model_kwargs={"device": device}
+        # )
         self.reranker = Reranker(reranker_model)
         self.reranker_name = reranker_model
         self.query_analyzer = create_query_analyzer()
@@ -103,12 +103,19 @@ class ChatBot:
     
     def retrieve(self, query, categories):
         vector = self.get_embedding(query)
-        kwargs = {
-            "return_uuids": True,
-            "vector": vector,
-            "alpha": 0.5,  # 1 - pure vector search, 0 - pure keyword search,
-            "filters": Filter.by_property("categories").contains_all(categories),
-        }
+        if 'all' in categories:
+            kwargs = {
+                "return_uuids": True,
+                "vector": vector,
+                "alpha": 0.5,  # 1 - pure vector search, 0 - pure keyword search,
+            }
+        else:
+            kwargs = {
+                "return_uuids": True,
+                "vector": vector,
+                "alpha": 0.5,  # 1 - pure vector search, 0 - pure keyword search,
+                "filters": Filter.by_property("categories").contains_all(categories),
+            }
         return self.retriever.similarity_search(query=query, k=10, **kwargs)
 
     def answer(self, input_query, chat_history, categories, context, **kwargs):

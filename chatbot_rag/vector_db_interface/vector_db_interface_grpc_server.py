@@ -26,7 +26,6 @@ class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
             contents.append(article.content)
             categories.append(list(article.categories))
 
-        self.db.insert(contents, categories)
         message, new_ids = self.db.insert(contents, categories)
         return vector_db_pb2.AddArticlesResponse(id=new_ids, response_message=message)
 

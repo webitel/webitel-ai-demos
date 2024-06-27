@@ -12,6 +12,7 @@ device = os.environ.get("DEVICE")
 db_host = os.environ.get("HOST")
 http_port = int(os.environ.get("HTTP_PORT"))
 grpc_port = int(os.environ.get("GRPC_PORT"))
+embedding_service_url = os.environ.get("EMBEDDING_SERVICE_URL")
 
 
 class VectorDatabase:
@@ -99,8 +100,9 @@ class VectorDatabase:
 
     @functools.lru_cache(maxsize=128)
     def get_dense_embedding(self, text):
-        response = requests.post("http://embedding_service:8000/embeddings", json={"text": text})
-        return response.json()["embedding"]
+        response = requests.post(embedding_service_url, json={"text": text})
+        res = response.json()["embedding"]
+        return res
 
 
 if __name__ == "__main__":
