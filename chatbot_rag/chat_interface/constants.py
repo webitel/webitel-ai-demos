@@ -1,1 +1,1 @@
-reranker_models_path = 'reranker_models'
+reranker_models_path = "reranker_models"

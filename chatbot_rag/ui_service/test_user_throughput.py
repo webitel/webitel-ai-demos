@@ -8,20 +8,26 @@ import chatbot_pb2
 import chatbot_pb2_grpc
 
 # gRPC channel setup
-channel = grpc.insecure_channel('localhost:8081')
+channel = grpc.insecure_channel("localhost:8081")
 stub = chatbot_pb2_grpc.ChatServiceStub(channel)
 
 # Test parameters
 user_metadata = {}
-categories = ['category']
-message_text = 'Як мені купити воду?'
+categories = ["category"]
+message_text = "Як мені купити воду?"
+
 
 # Function to send gRPC request
 def send_message():
     try:
         start = time.time()
-        response = stub.Answer(chatbot_pb2.MessageRequest(
-            user_metadata=user_metadata, categories=categories, messages=[chatbot_pb2.Message(message=message_text, sender='human')]))
+        response = stub.Answer(
+            chatbot_pb2.MessageRequest(
+                user_metadata=user_metadata,
+                categories=categories,
+                messages=[chatbot_pb2.Message(message=message_text, sender="human")],
+            )
+        )
         end = time.time()
         return end - start, response
     except grpc.RpcError as e:
@@ -29,13 +35,16 @@ def send_message():
     except Exception as e:
         return None, str(e)
 
+
 async def main():
     num_messages = 22  # Number of messages to send concurrently
 
     # Use ThreadPoolExecutor to manage concurrent tasks
     with ThreadPoolExecutor(max_workers=num_messages) as executor:
         # Submit tasks to the executor asynchronously
-        tasks = [loop.run_in_executor(executor, send_message) for _ in range(num_messages)]
+        tasks = [
+            loop.run_in_executor(executor, send_message) for _ in range(num_messages)
+        ]
 
         # Await all tasks to complete concurrently
         results = await asyncio.gather(*tasks)
@@ -55,17 +64,19 @@ async def main():
         print(f"Min time: {np.min(all_times)} seconds")
         print(f"Std time: {np.std(all_times)} seconds")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import time
+
     start_general = time.time()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
     end_time = time.time()
-    
+
     print(f"Total time taken: {end_time - start_general} seconds")
 
 
-# with 1 thread and 22 concurrent messages 
+# with 1 thread and 22 concurrent messages
 # Average time: 43.925138516859576 seconds
 # Max time: 78.52218389511108 seconds
 # Min time: 4.152154207229614 seconds
@@ -73,7 +84,7 @@ if __name__ == '__main__':
 # Total time taken: 78.54210901260376 seconds
 
 
-# with 10 threads and 22 concurrent messages 
+# with 10 threads and 22 concurrent messages
 # Average time: 16.30094156482003 seconds
 # Max time: 22.422840118408203 seconds
 # Min time: 4.616497278213501 seconds
@@ -87,7 +98,7 @@ if __name__ == '__main__':
 # Std time: 3.717238810535901 seconds
 # Total time taken: 17.96164035797119 seconds
 
-# with 22 threads and 22 concurrent messages 
+# with 22 threads and 22 concurrent messages
 # Average time: 26.19019732692025 seconds
 # Max time: 31.661612033843994 seconds
 # Min time: 6.172985553741455 seconds

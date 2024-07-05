@@ -4,7 +4,6 @@ import os
 import requests
 
 import weaviate
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from weaviate.classes.query import Filter
 
 openai_model = os.environ.get("OPENAI_MODEL")

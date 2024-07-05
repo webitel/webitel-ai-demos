@@ -94,15 +94,19 @@ class ChatBot:
             index_name=collection_name,
             embedding=self.get_embedding,
         )
-        
+
     def get_embedding(self, text):
-        response = requests.post("http://embedding_service:8000/embeddings", json={"text": text})
-        vector = response.json()["embedding"]#self.embedding_model.embed_documents([query])[0]
+        response = requests.post(
+            "http://embedding_service:8000/embeddings", json={"text": text}
+        )
+        vector = response.json()[
+            "embedding"
+        ]  # self.embedding_model.embed_documents([query])[0]
         return vector
-    
-    def retrieve(self, query, categories,k=10):
+
+    def retrieve(self, query, categories, k=10):
         vector = self.get_embedding(query)
-        if 'all' in categories:
+        if "all" in categories:
             kwargs = {
                 "return_uuids": True,
                 "vector": vector,
@@ -148,7 +152,11 @@ class ChatBot:
                 context_docs = []
                 for query in new_queries:
                     context_docs.extend(
-                        self.retrieve(query.paraphrased_query, categories,k = int(100/len(new_queries)))
+                        self.retrieve(
+                            query.paraphrased_query,
+                            categories,
+                            k=int(100 / len(new_queries)),
+                        )
                     )
 
                 logging.info(f"Retrieved docs: {context_docs}")
@@ -219,7 +227,7 @@ def create_history_query_analyzer():
         [
             ("system", system),
             ("human", "{question}"),
-            ('chat_history', "{chat_history}")
+            ("chat_history", "{chat_history}"),
         ]
     )
     llm = ChatOpenAI(
@@ -232,7 +240,6 @@ def create_history_query_analyzer():
     )
 
     return query_analyzer
-
 
 
 def create_query_analyzer():
@@ -263,7 +270,7 @@ def create_question_answer_chain(**kwargs):
         client_info = client_info + f"\n {kwargs_key} : {kwargs_value}"
     client_info += "\n"
 
-    qa_prompt_str = qa_prompt_str.replace('{user_metadata}',client_info)
+    qa_prompt_str = qa_prompt_str.replace("{user_metadata}", client_info)
 
     qa_prompt = ChatPromptTemplate.from_messages(
         [

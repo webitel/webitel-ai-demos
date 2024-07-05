@@ -26,6 +26,7 @@ access_key = os.environ.get("MINIO_ROOT_USER")
 secret_key = os.environ.get("MINIO_ROOT_PASSWORD")
 secure = False
 
+
 def train_cross_encoder(model_save_name):
     client = minio.Minio(
         endpoint=minio_url,

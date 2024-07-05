@@ -24,10 +24,12 @@ TRANSLATION_HOST = os.environ.get("TRANSLATION_HOST")
 TRANSLATION_PORT = os.environ.get("TRANSLATION_PORT")
 
 
-
 def translate_text(text):
-    response = requests.post(f"http://{TRANSLATION_HOST}:{TRANSLATION_PORT}/translate", json={"text": text})
+    response = requests.post(
+        f"http://{TRANSLATION_HOST}:{TRANSLATION_PORT}/translate", json={"text": text}
+    )
     return response.json()["translation"]
+
 
 def load_prompt(prompt_path):
     with open(prompt_path, "r") as f:
@@ -66,8 +68,8 @@ def generate_questions(question, answer, translate):
         generated_questions += f"Q{i}: {generated_question} \n"
 
         if translate:
-            generated_questions +=f"Q{i}: {translate_text(generated_question)}\n" 
-    
+            generated_questions += f"Q{i}: {translate_text(generated_question)}\n"
+
     return generated_questions
 
 
