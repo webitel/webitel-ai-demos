@@ -64,6 +64,9 @@ services:
     build: 
       context: ./chat_interface
     env_file: .env
+    volumes:
+      - ./prompts:/app/prompts:ro
+      - ./logs/chatbot.log:/app/chatbot.log  
     ports:
       - "50055-50056:50055"
     depends_on:
@@ -78,6 +81,8 @@ services:
     container_name: ui-service
     build: 
       context: ./ui_service
+    volumes:
+      - ./prompts:/app/prompts:ro
     env_file: .env
     ports:
       - "7860:7860"
@@ -116,6 +121,7 @@ services:
     restart: always
     volumes:
       - embedding_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data
+      - ./logs/vector_db_interface.log:/app/vector_db_interface.log
     deploy:
       resources:
         reservations:

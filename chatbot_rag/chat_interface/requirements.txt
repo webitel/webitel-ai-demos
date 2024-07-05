@@ -13,3 +13,5 @@ weaviate-client==4.6.4
 tenacity==8.3.0 
 langchain-community==0.2.4
 python-dotenv==1.0.1
+loguru==0.7.2
+minio==7.1.0

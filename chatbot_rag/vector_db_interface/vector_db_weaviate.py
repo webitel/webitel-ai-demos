@@ -18,9 +18,6 @@ class VectorDatabase:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        # self.dense_embedding_func = HuggingFaceEmbeddings(
-        #     model_name="ai-forever/sbert_large_nlu_ru", model_kwargs={"device": device}
-        # )
         with weaviate.connect_to_local(host=host, port=port) as client:
             while not client.is_ready():
                 pass

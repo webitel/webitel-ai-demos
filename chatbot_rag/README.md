@@ -16,4 +16,8 @@ OS: Debian GNU/Linux 12 (bookworm)
 4. Copy .env file from .sample_env and paste your OpenAI key.
 
 5. After all this steps you should be able to run `docker compose up` to run whole project. 
+
+You may run to install this requirements.(This was tested only on debian) 
+```
+./setup.sh 
 ```

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 from concurrent import futures
 
@@ -7,7 +7,13 @@ import vector_db_pb2
 import vector_db_pb2_grpc
 from vector_db_weaviate import VectorDatabase
 
-logging.basicConfig(level=logging.DEBUG)
+logger.add(
+    "vector_db_interface.log",
+    level="DEBUG",
+    rotation="50 MB",
+    backtrace=True,
+    diagnose=True,
+)
 
 host = os.getenv("HOST")
 http_port = int(os.getenv("HTTP_PORT"))
@@ -15,11 +21,10 @@ http_port = int(os.getenv("HTTP_PORT"))
 
 class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
     def __init__(self):
-        logging.log(logging.DEBUG, "Server: __init__")
         self.db = VectorDatabase(host=host, port=http_port)
-        logging.log(logging.DEBUG, "Server: __init__ done")
 
     def AddArticles(self, request, context):
+        logger.debug("Received request: {request}".format(request=request))
         contents = []
         categories = []
         for article in request.articles:
@@ -30,6 +35,7 @@ class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
         return vector_db_pb2.AddArticlesResponse(id=new_ids, response_message=message)
 
     def GetArticles(self, request, context):
+        logger.debug("Received request: {request}".format(request=request))
         res = self.db.get_articles(request.id, request.categories)
         articles = []
         for article in res:
@@ -43,12 +49,14 @@ class VectorDBServiceServicer(vector_db_pb2_grpc.VectorDBServiceServicer):
         return vector_db_pb2.GetArticlesResponse(articles=articles)
 
     def RemoveArticles(self, request, context):
+        logger.debug("Received request: {request}".format(request=request))
         message = self.db.remove(request.id)
         return vector_db_pb2.RemoveArticlesResponse(
             id=request.id, response_message=message
         )
 
     def UpdateArticles(self, request, context):
+        logger.debug("Received request: {request}".format(request=request))
         ids = []
         contents = []
         categories = []

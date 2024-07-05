@@ -1,7 +1,8 @@
 import contextlib
-import logging
 import os
 import requests
+from loguru import logger
+import re
 
 import weaviate
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -25,9 +26,6 @@ def timeout_context_manager(context):
             raise TimeoutError("Timeout")
 
 
-logging.basicConfig(level=logging.INFO)
-
-
 openai_model = os.environ.get("OPENAI_MODEL")
 device = os.environ.get("DEVICE")
 db_host = os.environ.get("HOST")
@@ -46,11 +44,12 @@ class Reranker:
             or model_name == "default"
             or model_name == ""
         ):
+            logger.debug("Loaded default model")
             self.model = CrossEncoder(
                 "DiTy/cross-encoder-russian-msmarco", max_length=512, device=device
             )
         else:
-            logging.info(f"Loaded model {model_name} from minio")
+            logger.debug(f"Loaded model: {model_name} from minio")
             self.model = load_model(
                 model_name,
                 device,
@@ -61,16 +60,13 @@ class Reranker:
             )
 
     def get_rank(self, queries, docs):
-        logging.info(f"Ranking {queries} queries and {docs} documents")
+        logger.debug(f"Ranking {queries} queries and {docs} documents")
         return self.model.rank(queries, docs)
 
 
 class ChatBot:
     def __init__(self, reranker_model="DiTy/cross-encoder-russian-msmarco"):
         collection_name = "KnowledgeBase"
-        # self.embedding_model = HuggingFaceEmbeddings(
-        #     model_name="ai-forever/sbert_large_nlu_ru", model_kwargs={"device": device}
-        # )
         self.reranker = Reranker(reranker_model)
         self.reranker_name = reranker_model
         self.query_analyzer = create_query_analyzer()
@@ -96,15 +92,17 @@ class ChatBot:
         )
 
     def get_embedding(self, text):
+        logger.debug(f"Getting embedding for: {text}")
         response = requests.post(
             "http://embedding_service:8000/embeddings", json={"text": text}
         )
-        vector = response.json()[
-            "embedding"
-        ]  # self.embedding_model.embed_documents([query])[0]
+        vector = response.json()["embedding"]
         return vector
 
     def retrieve(self, query, categories, k=10):
+        logger.debug(
+            f"Retrieving documents for query: {query} and categories: {categories}. k={k}"
+        )
         vector = self.get_embedding(query)
         if "all" in categories:
             kwargs = {
@@ -118,6 +116,7 @@ class ChatBot:
                 "vector": vector,
                 "alpha": 0.5,  # 1 - pure vector search, 0 - pure keyword search,
                 "filters": Filter.by_property("categories").contains_all(categories),
+                # TODO category ['ans] will match 'answer', 'answers','ans' etc. Probably need to fix it
             }
         return self.retriever.similarity_search(query=query, k=k, **kwargs)
 
@@ -128,6 +127,7 @@ class ChatBot:
 
                 # if there are no categories reply without context
                 if len(categories) == 0:
+                    logger.debug("Answering without context")
                     answer = self.qa_chain.invoke(
                         {
                             "input": input_query,
@@ -137,7 +137,7 @@ class ChatBot:
                     )
                     return answer, []
 
-                logging.info(f"Categories: {categories}")
+                logger.debug(f"Categories: {categories}")
 
             with timeout_context_manager(context):
                 # 1. generate new queries
@@ -145,7 +145,7 @@ class ChatBot:
                 self.history_analyzer = create_query_analyzer()
                 new_queries.append(ParaphrasedQuery(paraphrased_query=input_query))
 
-                logging.info(f"New queries: {new_queries}")
+                logger.debug(f"New queries: {new_queries}")
 
             with timeout_context_manager(context):
                 # 2. retrieve documents
@@ -159,7 +159,7 @@ class ChatBot:
                         )
                     )
 
-                logging.info(f"Retrieved docs: {context_docs}")
+                logger.debug(f"Retrieved docs: {context_docs}")
 
                 # 3. remove duplicates
                 deduped_docs = []
@@ -167,6 +167,19 @@ class ChatBot:
                     if doc not in deduped_docs:
                         deduped_docs.append(doc)
 
+                # 4. transform kwargs
+                transformed_kwargs = {
+                    re.sub(r"\s*\(.*?\)\s*", "", key).strip(): value
+                    for key, value in kwargs.items()
+                }
+                # Replace keys in doc.page_content with corresponding values
+                for doc in deduped_docs:
+                    page_content = doc.page_content
+                    for key, value in transformed_kwargs.items():
+                        page_content = page_content.replace(key, value)
+                    doc.page_content = page_content
+
+                logger.debug(f"Transformed docs: {deduped_docs}")
             with timeout_context_manager(context):
                 if len(deduped_docs) != 0:
                     # 4. rerank documents and select best 10
@@ -177,7 +190,7 @@ class ChatBot:
                         deduped_docs[rank["corpus_id"]] for rank in ranks[:10]
                     ]
 
-                    logging.info(f"Used docs: {best_ranked_docs}")
+                    logger.debug(f"Used docs: {best_ranked_docs}")
                     answer = self.qa_chain.invoke(
                         {
                             "input": input_query,
@@ -200,11 +213,11 @@ class ChatBot:
                 )
 
         except TimeoutError as e:
-            logging.error(f"Timeout occurred in answer method: {str(e)}")
+            logger.error(f"Timeout occurred in answer method: {str(e)}")
             raise e  # Propagate the TimeoutError to handle it appropriately at a higher level
 
         except Exception as e:
-            logging.error(f"Exception occurred in answer method: {str(e)}")
+            logger.error(f"Exception occurred in answer method: {str(e)}")
             raise e  # Handle other exceptions according to your application's error handling strategy
 
     def reload_reranker_model(self, model_name):
@@ -271,7 +284,7 @@ def create_question_answer_chain(**kwargs):
     client_info += "\n"
 
     qa_prompt_str = qa_prompt_str.replace("{user_metadata}", client_info)
-
+    logger.debug(f"QA prompt: {qa_prompt_str}")
     qa_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", qa_prompt_str),
