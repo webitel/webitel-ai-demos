@@ -1,6 +1,6 @@
 OPENAI_API_KEY=
 CROSS_ENCODER_FILE="./data/processed/cross_encoder.csv"
-OPENAI_MODEL='gpt-3.5-turbo-0613'
+OPENAI_MODEL='gpt-3.5-turbo-16k-0613'
 DEVICE="cpu"
 GRPC_PORT=50051
 HTTP_PORT=8080
