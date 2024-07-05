@@ -1,6 +1,7 @@
 .env 
 app.logs
-*.csv
+**.log
+*.csv*
 *.json
 !vector_db.json
 env/
