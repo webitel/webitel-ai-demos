@@ -6,7 +6,6 @@ import requests
 import weaviate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.output_parsers import PydanticToolsParser
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -101,7 +100,7 @@ class ChatBot:
         vector = response.json()["embedding"]#self.embedding_model.embed_documents([query])[0]
         return vector
     
-    def retrieve(self, query, categories):
+    def retrieve(self, query, categories,k=10):
         vector = self.get_embedding(query)
         if 'all' in categories:
             kwargs = {
@@ -116,7 +115,7 @@ class ChatBot:
                 "alpha": 0.5,  # 1 - pure vector search, 0 - pure keyword search,
                 "filters": Filter.by_property("categories").contains_all(categories),
             }
-        return self.retriever.similarity_search(query=query, k=10, **kwargs)
+        return self.retriever.similarity_search(query=query, k=k, **kwargs)
 
     def answer(self, input_query, chat_history, categories, context, **kwargs):
         try:
@@ -139,6 +138,7 @@ class ChatBot:
             with timeout_context_manager(context):
                 # 1. generate new queries
                 new_queries = self.query_analyzer.invoke({"question": input_query})
+                self.history_analyzer = create_query_analyzer()
                 new_queries.append(ParaphrasedQuery(paraphrased_query=input_query))
 
                 logging.info(f"New queries: {new_queries}")
@@ -148,7 +148,7 @@ class ChatBot:
                 context_docs = []
                 for query in new_queries:
                     context_docs.extend(
-                        self.retrieve(query.paraphrased_query, categories)
+                        self.retrieve(query.paraphrased_query, categories,k = int(100/len(new_queries)))
                     )
 
                 logging.info(f"Retrieved docs: {context_docs}")
@@ -161,12 +161,12 @@ class ChatBot:
 
             with timeout_context_manager(context):
                 if len(deduped_docs) != 0:
-                    # 4. rerank documents and select best 5
+                    # 4. rerank documents and select best 10
                     ranks = self.reranker.get_rank(
                         input_query, [doc.page_content for doc in deduped_docs]
                     )
                     best_ranked_docs = [
-                        deduped_docs[rank["corpus_id"]] for rank in ranks[:5]
+                        deduped_docs[rank["corpus_id"]] for rank in ranks[:10]
                     ]
 
                     logging.info(f"Used docs: {best_ranked_docs}")
@@ -213,6 +213,28 @@ class ParaphrasedQuery(BaseModel):
     )
 
 
+def create_history_query_analyzer():
+    system = load_prompt("prompts/history_aware_retriever_prompt.txt")
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system),
+            ("human", "{question}"),
+            ('chat_history', "{chat_history}")
+        ]
+    )
+    llm = ChatOpenAI(
+        model=openai_model,
+        temperature=0,
+    )
+    llm_with_tools = llm.bind_tools([ParaphrasedQuery])
+    query_analyzer = (
+        prompt | llm_with_tools | PydanticToolsParser(tools=[ParaphrasedQuery])
+    )
+
+    return query_analyzer
+
+
+
 def create_query_analyzer():
     system = load_prompt("prompts/query_analyzer_prompt.txt")
     prompt = ChatPromptTemplate.from_messages(
@@ -235,21 +257,17 @@ def create_query_analyzer():
 
 def create_question_answer_chain(**kwargs):
     llm = ChatOpenAI(model=openai_model, temperature=0.4)
-    prefix = load_prompt("prompts/question_answer_chain.txt")
-    client_info = """You may answer about this additional data about the client, without context, but you should use this data to provide more accurate answer. 
-    Here is additional data about the client you are speaking with:"""
+    qa_prompt_str = load_prompt("prompts/question_answer_chain.txt")
+    client_info = ""
     for kwargs_key, kwargs_value in kwargs.items():
         client_info = client_info + f"\n {kwargs_key} : {kwargs_value}"
     client_info += "\n"
 
-    postfix = """Here is the context that you can use to answer the question and provide accrurate answer, you can rephrase answer from the context to make it more natural and accurate.:
-    {context}"""
-
-    qa_system_prompt = prefix + client_info + postfix
+    qa_prompt_str = qa_prompt_str.replace('{user_metadata}',client_info)
 
     qa_prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", qa_system_prompt),
+            ("system", qa_prompt_str),
             MessagesPlaceholder("chat_history"),
             ("human", "{input}"),
         ]

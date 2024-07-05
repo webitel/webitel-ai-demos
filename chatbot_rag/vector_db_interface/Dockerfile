@@ -20,3 +20,4 @@ RUN ./generate_grpc.sh
 
 # Set the entrypoint command
 CMD ["python", "vector_db_interface_grpc_server.py"]
+

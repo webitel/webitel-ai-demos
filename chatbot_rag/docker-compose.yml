@@ -23,7 +23,8 @@ services:
     - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
     environment:
-      QUERY_DEFAULTS_LIMIT: 100
+      QUERY_DEFAULTS_LIMIT: 10000
+      QUERY_MAXIMUM_RESULTS : 100000
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'none'
@@ -115,7 +116,13 @@ services:
     restart: always
     volumes:
       - embedding_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data
-  
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   translation_service:
     container_name: translation_service
     build: 
@@ -126,3 +133,10 @@ services:
     restart: always
     volumes:
       - translation_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

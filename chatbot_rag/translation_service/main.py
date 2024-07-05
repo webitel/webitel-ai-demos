@@ -2,13 +2,14 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from fastapi import FastAPI, Request
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
-
+import torch
 # Load the model and tokenizer
 # model_name = "facebook/nllb-200-distilled-600M"#"Helsinki-NLP/opus-mt-uk-ru"
 # tokenizer = AutoTokenizer.from_pretrained(model_name)
 # model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+device = 'cuda' if torch.cuda.is_available() else 'cpu' 
 
-model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M")
+model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M",torch_dtype=torch.float16).to(device)
 tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
 
 # Function to translate text
@@ -28,14 +29,11 @@ def translate_facebook(text, src_lang, tgt_lang='rus_Cyrl'):
     translated_text = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)
     return translated_text[0]
 
-model = M2M100ForConditionalGeneration.from_pretrained("facebook/m2m100_418M")
-tokenizer = M2M100Tokenizer.from_pretrained("facebook/m2m100_418M")
-
 # translate Hindi to French
 #https://huggingface.co/facebook/m2m100_418M
 def translate_m2m(text,src_lang="uk", tgt_lang="ru"):
     tokenizer.src_lang = src_lang
-    encoded_hi = tokenizer(text, return_tensors="pt")
+    encoded_hi = tokenizer(text, return_tensors="pt").to(device)
     generated_tokens = model.generate(**encoded_hi, forced_bos_token_id=tokenizer.get_lang_id(tgt_lang))
     return tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
     
@@ -45,7 +43,6 @@ def translate_m2m(text,src_lang="uk", tgt_lang="ru"):
 app = FastAPI()
 
 # Define the device for Torch (CPU in this case)
-device = 'cpu'
 # lang_codes = tokenizer.lang_code_to_id.keys()
 
 # Print the language codes

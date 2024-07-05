@@ -4,6 +4,7 @@ import re
 import requests
 import io
 import logging
+import tempfile
 
 import gradio as gr
 import grpc
@@ -17,6 +18,7 @@ from utils import (
     generate_questions,
     get_samples_from_minio,
 )
+from io import StringIO
 
 minio_login = os.environ.get("MINIO_ROOT_USER")
 minio_password = os.environ.get("MINIO_ROOT_PASSWORD")
@@ -155,6 +157,14 @@ def refresh_data_cross():
         gr.Info(message="Error: " + str(e))
 
 
+def download_csv(dataframe):
+    dataframe_copy = dataframe.drop(columns=['content','id'])
+    dataframe_copy['question'] =  dataframe['content'].apply(lambda x: x.split(':')[1].replace('Відповідь','').strip())
+    dataframe_copy['answer'] =  dataframe['content'].apply(lambda x: x.split(':')[2].strip())
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
+    dataframe_copy.to_csv(temp_file.name, index=False)
+    return temp_file.name
+
 with gr.Blocks() as demo:
     with gr.Tab("Add new example"):
         question = gr.Textbox("Question", label="Question")
@@ -203,7 +213,9 @@ with gr.Blocks() as demo:
             checkbox = gr.Checkbox(label="Overwrite", value=False)
             translate = gr.Checkbox(label="Translate", value=False)
             u.upload(upload_csv,[u,checkbox,translate])
-                
+        with gr.Row():
+            download_button = gr.Button("Download CSV")
+            download_button.click(download_csv, [gr_df], outputs=gr.File())
     # with gr.Tab("Context Used In Answers"):
     #     context_df = pd.DataFrame(context_info, columns=["Question", "Documents"])
     #     context_df_gradio = gr.DataFrame(context_df, interactive=False)

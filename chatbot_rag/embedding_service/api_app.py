@@ -6,7 +6,7 @@ import torch
 app = FastAPI()
 
 # Define the device for Torch (CPU in this case)
-device = 'cpu'
+device = 'cuda' if torch.cuda.is_available() else 'cpu' 
 
 # Initialize the HuggingFace embeddings model
 embeddings_model = HuggingFaceEmbeddings(
