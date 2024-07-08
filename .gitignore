@@ -1,3 +1,6 @@
+#ignore all protos except main folder
+*/*/protos/** 
+
 .env 
 app.logs
 **.log

@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 #Generate grcp files
-RUN ./generate_grpc.sh
+RUN protos/generate_grpc.sh
 
 # Set the entrypoint command
 CMD ["python", "vector_db_interface_grpc_server.py"]
