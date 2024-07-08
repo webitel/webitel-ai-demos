@@ -118,6 +118,20 @@ def get_samples_from_minio(bucket_name="chatbot-rag"):
         return f"Some issue occured while fetching samples from Minio!, Error: {e}"
 
 
+def refresh_data_context(bucket_name="chatbot-rag"):
+    # Initialize Minio client
+    client = minio.Minio(
+        minio_url, access_key=minio_login, secret_key=minio_password, secure=False
+    )
+    try:
+        # Read the CSV file from Minio bucket
+        csv_data = client.get_object(bucket_name, "context.csv").data
+        df = pd.read_csv(BytesIO(csv_data))
+        return df
+    except Exception as e:
+        return f"Some issue occured while fetching samples from Minio!, Error: {e}"
+
+
 if __name__ == "__main__":
     df = pd.DataFrame(
         [

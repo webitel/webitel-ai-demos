@@ -18,5 +18,7 @@ COPY . .
 #Generate grcp files
 RUN protos/generate_grpc.sh
 
+RUN pip install pandas
+
 # Set the entrypoint command
 CMD ["python", "chat_interface_grpc_server.py"]
