@@ -16,7 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 #Generate grcp files
-RUN ./generate_grpc.sh
+RUN protos/generate_grpc.sh
+
+RUN pip install pandas
 
 # Set the entrypoint command
 CMD ["python", "chat_interface_grpc_server.py"]
