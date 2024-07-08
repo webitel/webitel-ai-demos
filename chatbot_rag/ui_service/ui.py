@@ -12,12 +12,14 @@ import numpy as np
 import pandas as pd
 import vector_db_pb2
 import vector_db_pb2_grpc
+from constants import default_reranker_file
 from train_cross_encoder import train_cross_encoder
 from utils import (
     add_sample_for_cross_encoder,
     generate_questions,
     get_samples_from_minio,
     refresh_data_context,
+    remove_file_from_minio,
 )
 
 minio_login = os.environ.get("MINIO_ROOT_USER")
@@ -173,6 +175,27 @@ def download_csv(dataframe):
     return temp_file.name
 
 
+def upload_csv_cross(file, overwrite=False):
+    df = pd.read_csv(io.BytesIO(file))
+    for default_columns in ["query", "positive", "negative"]:
+        if default_columns not in df.columns:
+            gr.Info(message=f"Can not Load, Column {default_columns} is required")
+            return
+    if overwrite:
+        remove_file_from_minio(file_name=default_reranker_file)
+        gr.Info(message="Previous data removed")
+    res = add_sample_for_cross_encoder(df)
+    if res == "Samples added successfully!":
+        gr.Info(message="Data uploaded")
+
+
+def download_csv_cross(dataframe):
+    df = get_samples_from_minio()
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+    df.to_csv(temp_file.name, index=False)
+    return temp_file.name
+
+
 with gr.Blocks() as demo:
     with gr.Tab("Add new example"):
         question = gr.Textbox("Question", label="Question")
@@ -272,6 +295,13 @@ with gr.Blocks() as demo:
         btn_train_cross_encoder.click(
             train_cross_encoder_with_popup, model_name, show_progress=True
         )
+        with gr.Row():
+            u = gr.UploadButton("Upload CSV", file_count="single", type="binary")
+            checkbox = gr.Checkbox(label="Overwrite", value=False)
+            u.upload(upload_csv_cross, [u, checkbox])
+        with gr.Row():
+            download_button = gr.Button("Download CSV")
+            download_button.click(download_csv_cross, [table], outputs=gr.File())
 
     with gr.Tab("Used Context"):
         gr_df_cross = gr.DataFrame(pd.DataFrame(), interactive=True)

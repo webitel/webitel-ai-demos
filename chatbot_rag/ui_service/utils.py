@@ -132,6 +132,19 @@ def refresh_data_context(bucket_name="chatbot-rag"):
         return f"Some issue occured while fetching samples from Minio!, Error: {e}"
 
 
+def remove_file_from_minio(bucket_name="chatbot-rag", file_name="context.csv"):
+    # Initialize Minio client
+    client = minio.Minio(
+        minio_url, access_key=minio_login, secret_key=minio_password, secure=False
+    )
+    try:
+        # Remove the file from Minio bucket
+        client.remove_object(bucket_name, file_name)
+        return f"File {file_name} removed successfully!"
+    except Exception as e:
+        return f"Some issue occured while removing file from Minio!, Error: {e}"
+
+
 if __name__ == "__main__":
     df = pd.DataFrame(
         [
