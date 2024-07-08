@@ -12,7 +12,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_weaviate import WeaviateVectorStore
 from sentence_transformers import CrossEncoder
-from utils import load_model, load_prompt
+from utils import load_model, load_prompt, store_context_info_to_minio
 from weaviate.classes.query import Filter
 
 
@@ -206,7 +206,15 @@ class ChatBot:
                             "chat_history": chat_history,
                         }
                     )
-
+                store_context_info_to_minio(
+                    input_query,
+                    answer,
+                    best_ranked_docs,
+                    minio_default_bucket,
+                    minio_root_user,
+                    minio_root_password,
+                    minio_url,
+                )
                 return (
                     answer,
                     best_ranked_docs if "best_ranked_docs" in locals() else [],

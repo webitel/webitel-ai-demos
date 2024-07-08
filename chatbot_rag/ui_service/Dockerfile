@@ -25,7 +25,7 @@ COPY . /app
 # Make port 7860 available to the world outside this container
 EXPOSE 7860
 
-RUN ./generate_grpc.sh
+RUN protos/generate_grpc.sh
 
 # Run ui when the container launches
 CMD ["python", "ui.py"]

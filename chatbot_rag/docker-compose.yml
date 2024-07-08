@@ -54,6 +54,8 @@ services:
     build: 
       context: ./vector_db_interface
     env_file: .env
+    volumes:
+      - ./logs/vector_db_interface.log:/app/vector_db_interface.log
     ports:
       - "50053:50051"
     depends_on:
@@ -121,7 +123,6 @@ services:
     restart: always
     volumes:
       - embedding_model_data:/root/.cache/huggingface/transformers  # Mount volume for embedding service model data
-      - ./logs/vector_db_interface.log:/app/vector_db_interface.log
     deploy:
       resources:
         reservations:
