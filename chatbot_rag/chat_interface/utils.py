@@ -3,7 +3,7 @@ from sentence_transformers import CrossEncoder
 import os
 from constants import reranker_models_path
 import shutil
-import logging
+from loguru import logger
 import pandas as pd
 import io
 
@@ -16,7 +16,11 @@ def load_prompt(prompt_path):
 
 def load_model(model_name, device, bucket_name, access_key, secret_key, minio_url):
     if os.path.exists(os.path.join(reranker_models_path, model_name)):
-        return CrossEncoder(model_name, max_length=512, device=device)
+        return CrossEncoder(
+            os.path.join(reranker_models_path, model_name),
+            max_length=512,
+            device=device,
+        )
 
     client = minio.Minio(
         minio_url, access_key=access_key, secret_key=secret_key, secure=False
@@ -35,7 +39,7 @@ def load_model(model_name, device, bucket_name, access_key, secret_key, minio_ur
             )
         )
         print(f"removing {sorted_dirs[-1]}")
-        logging.error(f"removing {sorted_dirs[-1]}")
+        logger.debug(f"removing {sorted_dirs[-1]}")
         shutil.rmtree(os.path.join(reranker_models_path, sorted_dirs[-1]))
 
     for item in client.list_objects(
@@ -45,6 +49,7 @@ def load_model(model_name, device, bucket_name, access_key, secret_key, minio_ur
     ):
         client.fget_object(bucket_name, item.object_name, item.object_name)
 
+    logger.debug(f"Loading model {os.path.join(reranker_models_path, model_name)}")
     return CrossEncoder(
         os.path.join(reranker_models_path, model_name), max_length=512, device=device
     )

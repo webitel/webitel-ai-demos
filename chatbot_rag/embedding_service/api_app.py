@@ -1,12 +1,13 @@
 from fastapi import FastAPI, Request
 from langchain_community.embeddings import HuggingFaceEmbeddings
 import torch
+import os
 
 # Initialize the FastAPI app
 app = FastAPI()
 
 # Define the device for Torch (CPU in this case)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = os.getenv("DEVICE")
 
 # Initialize the HuggingFace embeddings model
 embeddings_model = HuggingFaceEmbeddings(

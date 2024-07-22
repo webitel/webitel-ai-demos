@@ -26,6 +26,7 @@ class ChatServiceServicer(chatbot_pb2_grpc.ChatServiceServicer):
             )
         )
         if request.model_name != self.chatbot.reranker_name:
+            logger.debug(f"Reloading reranker model to {request.model_name}")
             self.chatbot.reload_reranker_model(request.model_name)
 
         last_message = ""

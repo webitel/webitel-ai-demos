@@ -27,7 +27,7 @@ def timeout_context_manager(context):
 
 
 openai_model = os.environ.get("OPENAI_MODEL")
-device = os.environ.get("DEVICE")
+device = "cpu"  # os.environ.get("DEVICE") currently the model is only on cpu
 db_host = os.environ.get("HOST")
 http_port = int(os.environ.get("HTTP_PORT"))
 grpc_port = int(os.environ.get("GRPC_PORT"))
@@ -44,12 +44,11 @@ class Reranker:
             or model_name == "default"
             or model_name == ""
         ):
-            logger.debug("Loaded default model")
             self.model = CrossEncoder(
                 "DiTy/cross-encoder-russian-msmarco", max_length=512, device=device
             )
+            logger.debug("Loaded default model")
         else:
-            logger.debug(f"Loaded model: {model_name} from minio")
             self.model = load_model(
                 model_name,
                 device,
@@ -58,6 +57,7 @@ class Reranker:
                 minio_root_password,
                 minio_url,
             )
+            logger.debug(f"Loaded model: {model_name} from minio")
 
     def get_rank(self, queries, docs):
         logger.debug(f"Ranking {queries} queries and {docs} documents")
