@@ -1,12 +1,14 @@
 from fastapi import FastAPI, Request
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 import torch
+import os
+
 
 # Load the model and tokenizer
 # model_name = "facebook/nllb-200-distilled-600M"#"Helsinki-NLP/opus-mt-uk-ru"
 # tokenizer = AutoTokenizer.from_pretrained(model_name)
 # model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = os.getenv("DEVICE")
 
 model = M2M100ForConditionalGeneration.from_pretrained(
     "facebook/m2m100_418M", torch_dtype=torch.float16

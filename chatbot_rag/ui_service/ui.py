@@ -165,10 +165,18 @@ def refresh_data_cross():
 def download_csv(dataframe):
     dataframe_copy = dataframe.drop(columns=["content", "id"])
     dataframe_copy["question"] = dataframe["content"].apply(
-        lambda x: x.split(":")[1].replace("Відповідь", "").strip()
+        lambda x: (
+            lambda y: y.split(":")[1].replace("Відповідь", "").strip()
+            if len(y.split(":")) > 1
+            else None
+        )(x)
     )
     dataframe_copy["answer"] = dataframe["content"].apply(
-        lambda x: x.split(":")[2].strip()
+        lambda x: (
+            lambda y: "".join(y.split(":")[2:]).strip()
+            if len(y.split(":")) > 2
+            else None
+        )(x)
     )
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
     dataframe_copy.to_csv(temp_file.name, index=False)
