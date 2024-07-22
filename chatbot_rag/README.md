@@ -21,3 +21,10 @@ You may run to install this requirements.(This was tested only on debian)
 ```
 ./setup.sh 
 ```
+
+Then you may run 
+
+```
+./start.sh
+```
+This will build docker images and run the docker-compose.
