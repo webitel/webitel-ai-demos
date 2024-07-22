@@ -1,3 +1,7 @@
+#
+results/
+saved_models/
+
 #ignore all protos except main folder
 */*/protos/** 
 

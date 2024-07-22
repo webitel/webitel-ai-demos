@@ -1,0 +1,6 @@
+Your aim is to extract given topics from conversation.
+You will be given list of topics and conversation itself, please provide the most logical topics for this conversation.
+Here is the list of given topics : {possible_topics}
+
+Here is the conversation :
+{messages}
