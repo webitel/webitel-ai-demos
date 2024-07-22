@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+transformers
+datasets
+torch
+transformers[torch]
+scikit-learn
+sentencepiece
+protobuf
