@@ -1,5 +1,9 @@
 version: '3.4'
 
+networks:
+  minio-network:
+    external: true
+
 volumes:
   weaviate_data:
   minio_data:
@@ -29,25 +33,26 @@ services:
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'none'
       CLUSTER_HOSTNAME: 'node1'
-    
-  minio:
-    image: minio/minio
-    container_name: minio
-    ports:
-      - "9002:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
-      - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+    networks:
+      - minio-network
+  # minio:
+  #   image: minio/minio
+  #   container_name: minio
+  #   ports:
+  #     - "9002:9000"
+  #     - "9001:9001"
+  #   environment:
+  #     - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+  #     - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+  #     - MINIO_DEFAULT_BUCKETS=${MINIO_DEFAULT_BUCKETS}
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server /data --console-address ":9001"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
 
   vector_db_interface:
     container_name: vector-db-interface
@@ -61,7 +66,9 @@ services:
     depends_on:
       - "weaviate"
     restart: always
-  
+    networks:
+        - minio-network
+
   chat_interface:
     build: 
       context: ./chat_interface
@@ -78,6 +85,8 @@ services:
       mode: replicated
       replicas: 1
       endpoint_mode: vip
+    networks:
+      - minio-network
 
   ui_service:
     container_name: ui-service
@@ -92,6 +101,8 @@ services:
       - "weaviate"
       - "vector_db_interface"
     restart: always
+    networks:
+      - minio-network
 
     deploy:
       resources:
@@ -111,6 +122,8 @@ services:
       depends_on:
       - "chat_interface"
       restart: always
+      networks:
+      - minio-network
 
   embedding_service:
     container_name: embedding_service
@@ -130,6 +143,9 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    networks:
+      - minio-network
+    
   translation_service:
     container_name: translation_service
     build: 
@@ -147,3 +163,5 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    networks:
+      - minio-network
