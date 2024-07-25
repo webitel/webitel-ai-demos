@@ -91,12 +91,42 @@ if ! command_exists nvidia-container-toolkit; then
 fi
 
 # 5. Generate .env file and set OpenAI key
-echo "Generating .env file..."
-read -p "Please enter your OpenAI key: " openai_key
-cp .sample_env .env  # Assuming .sample_env exists
-sed -i "s/OPENAI_API_KEY=/OPENAI_API_KEY=$openai_key/" .env
-echo "Generated .env file with OpenAI key."
+#!/bin/bash
 
-# Inform the user about next steps
+# Path to .minio_config in the root directory
+MINIO_CONFIG_PATH="../minio.cfg"
+
+# Check if .minio_config exists
+if [ ! -f "$MINIO_CONFIG_PATH" ]; then
+    echo "Error: minio.cfg not found in the upper directory."
+    exit 1
+fi
+
+# Load MinIO configuration from .minio_config
+export $(grep -v '^#' "$MINIO_CONFIG_PATH" | xargs)
+
+# Create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "Generating .env file..."
+    cp .sample_env .env
+    
+    # Prompt for OpenAI key and update .env
+    read -p "Please enter your OpenAI key: " openai_key
+    sed -i "s/OPENAI_API_KEY=/OPENAI_API_KEY=$openai_key/" .env
+    echo "" >> .env
+    # Add MinIO configurations to .env
+    {
+        echo "MINIO_ROOT_USER=$MINIO_ROOT_USER"
+        echo "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD"
+        echo "MINIO_DEFAULT_BUCKETS=$MINIO_DEFAULT_BUCKETS"
+        echo "MINIO_URL=$MINIO_URL"
+    } >> .env
+
+    echo "Generated .env file with OpenAI key and MinIO credentials."
+else
+    echo ".env file already exists. Skipping generation."
+fi
+
+# Proceed with other setup steps
 echo "Setup completed successfully."
 echo "You can now run 'docker-compose up --build' to start the project."
