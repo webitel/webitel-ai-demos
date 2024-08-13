@@ -18,9 +18,9 @@ class WhisperPipeline:
             model=model_path,
             torch_dtype=torch_dtype,
             device=device,
-            return_timestamps="word",
+            return_timestamps=True,
             return_language=True,
-            generate_kwargs={"task": "transcribe"},
+            generate_kwargs={"task": "transcribe", "forced_decoder_ids": None},
         )
         # self.pipe.model.config.forced_decoder_ids = None
 
@@ -29,13 +29,17 @@ class WhisperPipeline:
         if language:
             return self.pipe(
                 audio_path,
-                chunk_length_s=30,
-                stride_length_s=14,
-                generate_kwargs={"language": language, "forced_decoder_ids": None},
+                chunk_length_s=0,
+                # stride_length_s=0,
+                generate_kwargs={
+                    "task": "transcribe",
+                    "language": language,
+                    "forced_decoder_ids": None,
+                },
             )
         return self.pipe(
             audio_path,
-            chunk_length_s=30,
-            stride_length_s=14,
+            chunk_length_s=0,
+            # stride_length_s=0,
             generate_kwargs={"task": "transcribe", "forced_decoder_ids": None},
         )

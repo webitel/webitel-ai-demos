@@ -10,7 +10,7 @@ class LanguageDetector:
     """Whisper for language detection"""
 
     def __init__(self) -> None:
-        model_path = "openai/whisper-base"
+        model_path = "openai/whisper-medium"
         self.processor = WhisperProcessor.from_pretrained(model_path)
         self.model = WhisperForConditionalGeneration.from_pretrained(model_path)
         self.tokenizer = WhisperTokenizer.from_pretrained(model_path)

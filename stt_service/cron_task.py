@@ -57,6 +57,7 @@ def job():
                 # lang_code = lang_detector.detect_language(mono_path)
                 res = stt.transcribe(mono_path)
                 transcription_results.append(res)
+                print(res, sep="\n\n")
             webitel_connection.upload_transcription(call_id, id, transcription_results)
 
         except Exception as e:
@@ -66,6 +67,7 @@ def job():
             save_last_date(new_last_date + 1)
             if os.path.exists(audio_path):
                 os.remove(audio_path)
+        break
 
 
 if __name__ == "__main__":
