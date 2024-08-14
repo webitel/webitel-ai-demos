@@ -116,13 +116,14 @@ class WebitelConnection:
                 if "items" in list_data:
                     for item in list_data["items"]:
                         call_ids.append(item["id"])
+
                         # for now only first file is used
                         file_ids.append(item["files"][0]["id"])
                         last_date = int(item["stored_at"])
                         self.last_date = max(self.last_date, last_date)
                         last_dates.append(last_date)
                     # Check if there's more data to fetch
-                    has_more_data = False  # list_data.get('next', False)
+                    has_more_data = list_data.get("next", False)
                 else:
                     has_more_data = False
             else:
