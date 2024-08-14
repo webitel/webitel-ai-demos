@@ -5,6 +5,7 @@ import os
 from src.stt_model_interface import STT
 from src.webitel_connector import WebitelConnection
 from src.utils import split_stereo_to_mono
+from src.language_identification.language_identification import LanguageIndentification
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename="app.log", encoding="utf-8", level=logging.DEBUG)
@@ -15,8 +16,9 @@ tmp_dir = "temp_data"
 config.read("speech_to_text.cfg")
 details_dict = dict(config.items("CONFIG"))
 details_dict["last_date"] = int(details_dict["last_date"])
+language_list = json.loads(details_dict["languages"])
 
-# lang_detector = LanguageDetector()
+lang_detector = LanguageIndentification(device="cuda")
 webitel_connection = WebitelConnection(
     details_dict["access_token"],
     details_dict["last_date"],
@@ -54,28 +56,32 @@ def job():
             transcription_results = []
             for mono_path in [left_mono_path, right_mono_path]:
                 # may be necessary for other models
-                # lang_code = lang_detector.detect_language(mono_path)
-                res = stt.transcribe(mono_path)
+                lang_code = lang_detector.detect_language(mono_path, language_list)
+
+                logging.info("Detected Language Code: %s" % lang_code)
+                res = stt.transcribe(mono_path, language=lang_code)
                 transcription_results.append(res)
-                print(res, sep="\n\n")
+
+            logger.info(f"Uploading transcription for call_id = {call_id}, id = {id}")
             webitel_connection.upload_transcription(call_id, id, transcription_results)
 
         except Exception as e:
-            logger.error(f"Transcription failed due to {str(e)}")
+            logger.error(
+                f"Transcription failed for call_id = {call_id}, id = {id} due to {str(e)}"
+            )
         finally:
             # +1 to ensure that we do not start transcribing the same recording again
             save_last_date(new_last_date + 1)
             if os.path.exists(audio_path):
                 os.remove(audio_path)
-        break
 
 
 if __name__ == "__main__":
     # TODO add scheduling from config
     job()
-    # schedule = scheduler.Scheduler()
-    # schedule.cyclic(dt.timedelta(minutes=1), job)
+#     # schedule = scheduler.Scheduler()
+#     # schedule.cyclic(dt.timedelta(minutes=1), job)
 
-    # while True:
-    #     schedule.exec_jobs()
-    #     time.sleep(1)
+#     # while True:
+#     #     schedule.exec_jobs()
+#     #     time.sleep(1)
