@@ -38,7 +38,7 @@ class WebitelConnection:
                 f"Error occured while downloading data. Status code {response.status_code}, message {response.text}"
             )
 
-    def upload_transcription(self, call_id, file_id, transcription_data: list[dict]):
+    def upload_transcription(self, call_id, file_id, transcription_data: dict[dict]):
         """Uploads transcription data to the server."""
         url = f"{self.base_url}/storage/transcript_file"
 
@@ -46,7 +46,7 @@ class WebitelConnection:
         phrases = []
         text = ""
         locale_occurances = []
-        for channel, transcription in enumerate(transcription_data):
+        for channel, transcription in transcription_data.items():
             for chunk in transcription["chunks"]:
                 phrases.append(
                     {

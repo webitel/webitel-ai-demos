@@ -36,7 +36,7 @@ class WhisperPipeline:
                     "task": "transcribe",
                     "language": language,
                     "forced_decoder_ids": None,
-                    "no_speech_threshold": 0.5,
+                    "no_speech_threshold": 0.7,
                     "logprob_threshold": -1,
                     "temperature": (0.0, 0.2),
                     # "num_beams": 5,

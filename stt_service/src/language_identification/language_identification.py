@@ -19,13 +19,13 @@ class LanguageIndentification:
 
     def detect_language(self, audio: str, languages: list[str], use_vad=True) -> str:
         detected_lang = None
-
+        timestamps = []
         if use_vad:
             # Find the closest timestamp to extract the most likely spoken segment
-            closest_timestamp = self.vad.find_closest_timestamp(audio)
+            closest_timestamp, timestamps = self.vad.find_closest_timestamp(audio)
             # If no speech is detected, return None
             if len(closest_timestamp) == 0:
-                return detected_lang
+                return detected_lang, timestamps
 
             start, end = closest_timestamp["start"], closest_timestamp["end"]
 
@@ -54,4 +54,4 @@ class LanguageIndentification:
         else:
             detected_lang = self.model.detect_language(audio, languages)
 
-        return detected_lang
+        return detected_lang, timestamps
