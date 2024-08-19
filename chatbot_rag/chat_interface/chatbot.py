@@ -120,6 +120,11 @@ class ChatBot:
             }
         return self.retriever.similarity_search(query=query, k=k, **kwargs)
 
+    def post_process_answer(self, answer):
+        answer = answer.replace("{", "")
+        answer = answer.replace("}", "")
+        return answer
+
     def answer(self, input_query, chat_history, categories, context, **kwargs):
         try:
             with timeout_context_manager(context):
@@ -135,7 +140,7 @@ class ChatBot:
                             "chat_history": chat_history,
                         }
                     )
-                    return answer, []
+                    return self.post_process_answer(answer), []
 
                 logger.debug(f"Categories: {categories}")
 
@@ -206,6 +211,7 @@ class ChatBot:
                             "chat_history": chat_history,
                         }
                     )
+                answer = self.post_process_answer(answer)
                 store_context_info_to_minio(
                     input_query,
                     answer,

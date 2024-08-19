@@ -1,7 +1,6 @@
 import requests
 import time
 import os
-from collections import Counter
 
 
 class WebitelConnection:
@@ -38,16 +37,17 @@ class WebitelConnection:
                 f"Error occured while downloading data. Status code {response.status_code}, message {response.text}"
             )
 
-    def upload_transcription(self, call_id, file_id, transcription_data: list[dict]):
+    def upload_transcription(
+        self, call_id, file_id, transcription_data: dict[dict], used_language
+    ):
         """Uploads transcription data to the server."""
         url = f"{self.base_url}/storage/transcript_file"
 
         # Prepare data in the required format
         phrases = []
         text = ""
-        locale_occurances = []
-        for channel, transcription in enumerate(transcription_data):
-            for chunk in transcription["chunks"]:
+        for channel, transcription in transcription_data.items():
+            for chunk in transcription[0]["offsets"]:
                 phrases.append(
                     {
                         "channel": channel,
@@ -56,14 +56,11 @@ class WebitelConnection:
                         "phrase": chunk["text"],
                     }
                 )
-                locale_occurances.append(chunk["language"])
-            text = f"Channel {channel} : {transcription['text']} \n"
-
-        locale_counter = Counter(locale_occurances)
+            text = f"Channel {channel} : {transcription[0]['text']} \n"
 
         payload = {
             "file_id": file_id,
-            "locale": locale_counter.most_common(1)[0][0],
+            "locale": used_language,
             "phrases": phrases,
             "text": text,
             "uuid": call_id,

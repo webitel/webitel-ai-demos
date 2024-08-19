@@ -1,5 +1,6 @@
-Your aim is to extract given topics from conversation.
-You will be given list of topics and conversation itself, please provide the most logical topics for this conversation.
+Your aim is to extract single most suitable topic and it's confidence ranging from 0 to 100 from conversation.
+Try to evaluate confidence it very precisely.
+You will be given list of topics and conversation itself, please provide the most logical topic for this conversation.
 Here is the list of given topics : {possible_topics}
 
 Here is the conversation :
