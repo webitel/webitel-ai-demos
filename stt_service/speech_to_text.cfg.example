@@ -4,7 +4,7 @@ w2v_tokenizer=/home/nazar/Demo_Chatbot_retrieval/experiments/train_w2v_bert
 whisper=openai/whisper-medium
 #whisper or w2v_bert
 model_type=whisper
-access_token=ACCESS_TOKEN
+access_token=access_token
 base_url=https://dev.webitel.com/api
 #Time from which to start collecting data, it is overriden by local json if such exists
 last_date=0

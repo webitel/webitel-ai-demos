@@ -21,7 +21,12 @@ class TopicExtractionRequest(BaseModel):
 
 
 class TopicExtractionResponse(BaseModel):
-    topics: List[str] = Field(..., description="Extracted topics from the conversation")
+    topics: List[str] = Field(
+        ..., description="Single extracted topic from the conversation"
+    )
+    confidence: float = Field(
+        ..., description="Confidence of the extracted topic being correct"
+    )
 
 
 def extract_topics_llm(possible_topics, messages):
@@ -31,8 +36,12 @@ def extract_topics_llm(possible_topics, messages):
     )
     structured_llm = llm.with_structured_output(TopicExtractionResponse)
     prompt = load_prompt()
-    prompt = prompt.format(possible_topics=possible_topics, messages=messages)
+    topics = "\n"
+    for i, topic in enumerate(possible_topics):
+        topics += f"Topic {i}.  {topic}\n"
+    prompt = prompt.format(possible_topics=topics, messages=messages)
     response = structured_llm.invoke(prompt)
+    print(prompt)
     return response
 
 
