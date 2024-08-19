@@ -8,7 +8,10 @@ class VoiceDetection:
     def detect_speech(self, audio_path: str, sampling_rate=16_000) -> list:
         wav = read_audio(audio_path, sampling_rate)
         speech_timestamps = get_speech_timestamps(
-            wav, self.model, min_speech_duration_ms=100, min_silence_duration_ms=10000
+            wav,
+            self.model,
+            min_speech_duration_ms=100,
+            min_silence_duration_ms=10_000,
         )
         speech_timestamps_seconds = []
         for i in speech_timestamps:
@@ -33,7 +36,7 @@ class VoiceDetection:
                 closest_difference = difference
                 closest_timestamp = timestamp
 
-        if pad:
+        if pad and closest_timestamp:
             duration = closest_timestamp["end"] - closest_timestamp["start"]
             if duration < target_s:
                 padding = (target_s - duration) / 2

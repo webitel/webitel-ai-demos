@@ -24,6 +24,13 @@ def split_stereo_to_mono(stereo_file_path, tmp_dir):
     return left_output_path, right_output_path
 
 
+def update_chunks(chunks, start):
+    for chunk in chunks:
+        chunk["timestamp"][0] += start
+        chunk["timestamp"][1] += start
+    return chunks
+
+
 if __name__ == "__main__":
     stereo_file_path = "recording_103976.mp3"  # Path to your stereo audio file
     left_output_path = "left_channel.wav"  # Path for the left channel mono file

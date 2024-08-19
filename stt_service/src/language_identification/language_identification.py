@@ -17,20 +17,22 @@ class LanguageIndentification:
         else:
             raise Exception("Model type not supported")
 
-    def detect_language(self, audio: str, languages: list[str], use_vad=True) -> str:
+    def detect_language(
+        self, audio: str, languages: list[str], use_vad=True
+    ) -> tuple[str, list[dict]]:
         detected_lang = None
         timestamps = []
         if use_vad:
             # Find the closest timestamp to extract the most likely spoken segment
             closest_timestamp, timestamps = self.vad.find_closest_timestamp(audio)
             # If no speech is detected, return None
-            if len(closest_timestamp) == 0:
+            if closest_timestamp is None or len(closest_timestamp) == 0:
                 return detected_lang, timestamps
 
             start, end = closest_timestamp["start"], closest_timestamp["end"]
 
             # Load the audio file with librosa
-            y, sr = librosa.load(audio, sr=None)
+            y, sr = librosa.load(audio, sr=16_000)
 
             # Calculate the sample indices for the start and end times
             start_sample = int(start * sr)
