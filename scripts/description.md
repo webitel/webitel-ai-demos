@@ -1,0 +1,1 @@
+Folder to launch microservices / services with bash scripts.

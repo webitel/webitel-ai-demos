@@ -1,0 +1,4 @@
+elevenlabs
+pydub
+flask
+torch
