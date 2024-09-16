@@ -1,0 +1,14 @@
+requests
+fastapi
+uvicorn
+python-multipart
+weaviate-client==4.7.1
+langchain==0.2.16
+langchain-core==0.2.38
+langchain-groq==0.1.9
+langchain-openai==0.1.23
+langchain-text-splitters==0.2.4
+langchain-weaviate==0.0.2
+rank-bm25==0.2.2
+rapidfuzz==3.9.4
+scikit-learn==1.5.1

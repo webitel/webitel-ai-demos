@@ -1,9 +1,10 @@
 #
 results/
 saved_models/
+data/
 
 #ignore all protos except main folder
-*/*/protos/** 
+*/protos/** 
 
 .env 
 app.logs

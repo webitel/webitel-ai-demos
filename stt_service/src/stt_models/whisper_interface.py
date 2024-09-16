@@ -2,13 +2,46 @@ import torch
 from transformers import AutoProcessor, WhisperForConditionalGeneration
 import librosa
 
+# https://github.com/SYSTRAN/faster-whisper/issues/935
+from faster_whisper import WhisperModel, BatchedInferencePipeline
+
+
+class FasterWhisper:
+    def __init__(self, model_path, batched=True, normalize=True) -> None:
+        self.model = WhisperModel(model_path, device="cuda", compute_type="float16")
+        self.batched = batched
+        self.normalize = normalize
+        if batched:
+            self.batched_model = BatchedInferencePipeline(model=self.model)
+
+    def transcribe(self, audio_path, language=None) -> tuple[list[dict[str, str]], str]:
+        if self.batched:
+            segments, info = self.batched_model.transcribe(
+                audio_path, batch_size=16, language=language
+            )
+        else:
+            segments, _ = self.model.transcribe(
+                audio_path, beam_size=1, language=language
+            )
+        segments = list(segments)  # The transcription will actually run here.
+        text = ""
+        for segment in segments:
+            text += segment.text + " "
+
+        if self.normalize:
+            text = text.replace(",", "").lower().strip()
+
+        result = [{"text": text}]
+
+        return result, language
+
 
 class WhisperPipeline:
-    def __init__(self, model_path):
+    def __init__(self, model_path="openai/whisper-medium"):
         self.sampling_rate = 16_000
         self.model_path = model_path
 
-        self.processor = AutoProcessor.from_pretrained("openai/whisper-medium")
+        self.processor = AutoProcessor.from_pretrained(model_path)
 
         if torch.cuda.is_available():
             device = "cuda:0"
@@ -17,7 +50,7 @@ class WhisperPipeline:
             device = "cpu"
             torch_dtype = torch.float32
         self.model = WhisperForConditionalGeneration.from_pretrained(
-            "openai/whisper-medium", torch_dtype=torch_dtype
+            model_path, torch_dtype=torch_dtype
         )
         self.model = self.model.to(device)
 

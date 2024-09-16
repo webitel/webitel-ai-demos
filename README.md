@@ -38,3 +38,8 @@ Here is the full list of services that utilize minio :
 - Rag Chatbot
 - Data Labeling Tool
 
+
+## Naming conventions for docker containers
+
+
+## 

@@ -3,3 +3,6 @@ transformers
 librosa
 soundfile
 pydub
+faster-whisper @ https://github.com/SYSTRAN/faster-whisper/archive/refs/heads/master.tar.gz
+torch
+flask

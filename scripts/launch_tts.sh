@@ -1,0 +1,1 @@
+docker run -d --rm --name tts-service -p 2000:6000 --gpus all --network webitel-ai-demos_common-network --env-file .env  tts_service
