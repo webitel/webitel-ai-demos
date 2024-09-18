@@ -22,6 +22,8 @@ class SimpleOrderingBot:
 
         # llm = ChatGroq(model="llama-3.1-70b-versatile", temperature=0.0, api_key=LLM_API_KEY)
 
+        # llm = OllamaLLM(model = "llama3.1",base_url = "https://poor-monkeys-behave.loca.lt/", stream= False, temperature=0.0)
+
         # Set up a parser + inject instructions into the prompt template.
         parser = JsonOutputParser(pydantic_object=order_scheme)
         prompt = PromptTemplate(

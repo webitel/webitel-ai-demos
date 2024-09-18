@@ -5,13 +5,13 @@ import io
 import requests
 import os
 from typing import Optional
-from src.simple_ordering_bot import SimpleOrderingBot
-from src.templates import SimpleOrder
 import weaviate
 import base64
 from base64 import b64encode
 import json
 import ast
+from src.simple_ordering_bot import SimpleOrderingBot
+from src.templates import SimpleOrder
 
 app = FastAPI()
 
@@ -54,7 +54,7 @@ class ChatHistoryItem(BaseModel):
     sender: str
 
 
-@app.post("/process-audio/")
+@app.post("/process-audio")
 async def process_audio(
     file: UploadFile = File(...),
     chat_history: Optional[str] = Form(None),
