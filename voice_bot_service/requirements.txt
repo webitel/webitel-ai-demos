@@ -12,3 +12,4 @@ langchain-weaviate==0.0.2
 rank-bm25==0.2.2
 rapidfuzz==3.9.4
 scikit-learn==1.5.1
+langchain-ollama
