@@ -2,7 +2,7 @@ from src.stt_models.whisper_interface import FasterWhisper
 from flask import Flask, request, jsonify
 
 # create api with this model
-stt_model = FasterWhisper(model_path="medium")
+stt_model = FasterWhisper(model_path="medium", batched=False)
 
 app = Flask(__name__)
 
@@ -16,7 +16,9 @@ def transcribe():
     audio_file_path = "received_audio.wav"
     audio_file.save(audio_file_path)
 
-    transcription_result, language = stt_model.transcribe(audio_file_path)
+    transcription_result, language = stt_model.transcribe(
+        audio_file_path, language="uk"
+    )
     return jsonify(
         {"transcription": transcription_result[0]["text"], "language": language}
     )

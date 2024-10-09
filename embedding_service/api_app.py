@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from transformers import AutoModel
 import torch
 import os
 
@@ -10,9 +10,12 @@ app = FastAPI()
 device = os.getenv("DEVICE")
 
 # Initialize the HuggingFace embeddings model
-embeddings_model = HuggingFaceEmbeddings(
-    model_name="ukr-models/xlm-roberta-base-uk",
-    model_kwargs={"device": device, "model_kwargs": {"torch_dtype": torch.float16}},
+model = (
+    AutoModel.from_pretrained(
+        "jinaai/jina-embeddings-v3", trust_remote_code=True, torch_dtype=torch.float16
+    )
+    .to("cuda")
+    .half()
 )
 
 
@@ -21,5 +24,6 @@ embeddings_model = HuggingFaceEmbeddings(
 async def get_embeddings(request: Request):
     data = await request.json()
     text = data["text"]
-    embedding = embeddings_model.embed_query(text)
+    task = data.get("task", None)
+    embedding = model.encode(text, task=task).tolist()
     return {"embedding": embedding}

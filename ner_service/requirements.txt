@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+gliner
+pydantic
+requests

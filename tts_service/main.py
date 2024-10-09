@@ -3,7 +3,7 @@ from src.tts import TTS_Module
 
 app = Flask(__name__)
 
-tts = TTS_Module()  # TTS_ElevenLabs()
+tts = TTS_Module()  # TTS_Module() #TTS_ElevenLabs()
 
 
 @app.route("/tts", methods=["POST"])
@@ -23,7 +23,7 @@ def process_audio():
                 while chunk := f.read(4096):
                     yield chunk
         else:
-            for chunk in tts.synthetize_stream(text):
+            for chunk in tts.synthesize_stream(text):
                 yield chunk
 
     return Response(generate_audio_stream(), mimetype="audio/wav")

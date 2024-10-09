@@ -30,3 +30,4 @@ zipp==3.19.2
 sentence-transformers==3.0.1
 ray[serve]
 sentencepiece
+einops

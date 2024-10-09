@@ -77,7 +77,7 @@ def date_selector(delivery_time, all_times):
     closest_time = min(all_times_dt, key=lambda x: abs(x - delivery_time))
 
     # Return the closest time formatted back to string (if needed)
-    return get_ukrainian_date(closest_time.strftime("%Y-%m-%d %H:%M"))
+    return get_ukrainian_date(closest_time.strftime("%Y-%m-%d %H:%M")), closest_time
 
 
 def select_bm25(requested, possibilities):
@@ -109,9 +109,7 @@ def select_best_matches(
         # best_match = process.extractOne(requested_product, product_names)
 
         # final_products.append(best_match[0])
-        response = requests.post(embedding_url, json={"text": requested_product})
-        response_body = response.json()
-        target_embedding = response_body["embedding"]
+        target_embedding = get_embedding(requested_product)
         best_similarity = -1
         best_match = None
         for product_name, product_embedding in zip(product_names, product_embeddings):
@@ -131,7 +129,9 @@ def select_best_matches(
 
 
 def get_embedding(text: str):
-    response = requests.post(embedding_url, json={"text": text})
+    response = requests.post(
+        embedding_url, json={"text": text, "task": "text-matching"}
+    )
     response_body = response.json()
     return response_body["embedding"]
 
@@ -148,9 +148,9 @@ def select_best_match_in_db(client, requested_products, index_name="ProductList"
     connection_end = time.time()
     print(f"Connection time: {connection_end - connection_start}")
     best_matches = []
-    alpha = 0.5
+    alpha = 0.0
     if index_name != "ProductList":
-        alpha = 0.5
+        alpha = 0.0
     total_time_embedding = 0
     total_time_search = 0
     for product in requested_products:
@@ -170,4 +170,50 @@ def select_best_match_in_db(client, requested_products, index_name="ProductList"
         total_time_search += search_end - search_start
     print(f"Total time embedding: {total_time_embedding}")
     print(f"Total time search: {total_time_search}")
+    return best_matches
+
+
+def select_best_match_in_db2(client, requested_products, index_name="ProductList"):
+    connection_start = time.time()
+    retriever = WeaviateVectorStore(
+        client,
+        attributes=["categories"],
+        text_key="content",
+        index_name=index_name,
+        embedding=get_embedding,
+    )
+    connection_end = time.time()
+    print(f"Connection time: {connection_end - connection_start}")
+    alpha = 1
+    if index_name != "ProductList":
+        alpha = 1
+    total_time_embedding = 0
+    total_time_search = 0
+    best_matches = {}
+    for product in requested_products:
+        embedding_start = time.time()
+        vector = get_embedding(product)
+        embedding_end = time.time()
+        total_time_embedding += embedding_end - embedding_start
+        kwargs = {
+            "return_uuids": True,
+            "vector": vector,
+            "alpha": alpha,  # 1 - pure vector search, 0 - pure keyword search,
+        }
+        search_start = time.time()
+        res = retriever.similarity_search(query=product, k=5, **kwargs)
+        search_end = time.time()
+        print(res)
+        best_matches[product] = [
+            (res[0].page_content, res[0].metadata["price"]),
+            (res[1].page_content, res[1].metadata["price"]),
+            (res[2].page_content, res[2].metadata["price"]),
+            (res[3].page_content, res[3].metadata["price"]),
+            (res[4].page_content, res[4].metadata["price"]),
+        ]
+
+        total_time_search += search_end - search_start
+    print(f"Total time embedding: {total_time_embedding}")
+    print(f"Total time search: {total_time_search}")
+    print(best_matches)
     return best_matches

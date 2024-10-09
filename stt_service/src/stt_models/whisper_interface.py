@@ -8,9 +8,9 @@ from faster_whisper import WhisperModel, BatchedInferencePipeline
 
 class FasterWhisper:
     def __init__(self, model_path, batched=True, normalize=True) -> None:
-        self.model = WhisperModel(model_path, device="cuda", compute_type="float16")
         self.batched = batched
         self.normalize = normalize
+        self.model = WhisperModel(model_path, device="cuda", compute_type="float16")
         if batched:
             self.batched_model = BatchedInferencePipeline(model=self.model)
 
