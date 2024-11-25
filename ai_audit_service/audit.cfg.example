@@ -1,0 +1,6 @@
+[CONFIG]
+openai_api_key=OPENAI_KEY
+access_token=ACCESS_TOKEN
+base_url=https://cloud.webitel.ua/api
+variable_name=ai_audit
+last_date=0
