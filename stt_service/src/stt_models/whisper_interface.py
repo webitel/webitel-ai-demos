@@ -10,7 +10,9 @@ class FasterWhisper:
     def __init__(self, model_path, batched=True, normalize=True) -> None:
         self.batched = batched
         self.normalize = normalize
-        self.model = WhisperModel(model_path, device="cuda", compute_type="float16")
+        self.model = WhisperModel(
+            model_path, device="cuda", compute_type="float16", num_workers=3
+        )
         if batched:
             self.batched_model = BatchedInferencePipeline(model=self.model)
 
@@ -37,13 +39,13 @@ class FasterWhisper:
 
 
 class WhisperPipeline:
-    def __init__(self, model_path="openai/whisper-medium"):
+    def __init__(self, model_path="openai/whisper-medium", device="cpu"):
         self.sampling_rate = 16_000
         self.model_path = model_path
-
         self.processor = AutoProcessor.from_pretrained(model_path)
+        self.device = device
 
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and device == "cuda":
             device = "cuda:0"
             torch_dtype = torch.float16
         else:
@@ -60,7 +62,10 @@ class WhisperPipeline:
         inputs = self.processor(
             y, return_tensors="pt", truncation=False, sampling_rate=16_000
         )
-        inputs = inputs.to("cuda", torch.float16)
+        if self.device == "cpu":
+            pass
+        elif self.device == "cuda":
+            inputs = inputs.to(self.device, torch.float16)
 
         generate_kwargs = {
             "forced_decoder_ids": None,
@@ -101,3 +106,26 @@ class WhisperPipeline:
                 output["segments"][0][i]["end"].item(),
             )
         return result, language
+
+
+# curl -X 'GET' \
+#   'https://cloud.webitel.ua/api/call_center/audit/forms/2' \
+#   -H 'accept: application/json' \
+#   -H "x-webitel-access: ekxyxpikp7yjtfeih97ddiauyr"
+
+# curl -X 'GET' \
+#   'https://dev.webitel.com/api/call_center/audit/forms/2' \
+#   -H 'accept: application/json'
+
+# access_token=n4x5n3m9e3yrmjnjk91xoxij7h
+# base_url=https://cloud.webitel.ua/api
+
+# curl -X 'GET' \
+#   'https://cloud.webitel.ua/api/storage/transcript_file/3374213/phrases?page=0&size=100' \
+#   -H 'accept: application/json' \
+#   -H "x-webitel-access: ekxyxpikp7yjtfeih97ddiauyr"
+
+#   curl -X 'GET' \
+#   'https://cloud.webitel.ua/api/call_center/audit/forms/6' \
+#   -H 'accept: application/json'
+#   -H "x-webitel-access: ekxyxpikp7yjtfeih97ddiauyr"

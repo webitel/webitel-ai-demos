@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     libcudnn8 \
     libcudnn8-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
 
 
 # Make python3 the default python
@@ -20,7 +20,14 @@ COPY requirements.txt requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN pip install --no-cache-dir fastapi uvicorn
+RUN pip install --no-cache-dir python-multipart
+RUN pip install --no-cache-dir huggingface_hub pyctcdecode 
+RUN apt-get update && apt-get install -y build-essential libboost-all-dev cmake zlib1g-dev libbz2-dev liblzma-dev
+RUN pip install https://github.com/kpu/kenlm/archive/master.zip
+
+
 COPY ./ ./
 
 
-CMD ["python","api.py"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "5000",  "--workers","1"]
