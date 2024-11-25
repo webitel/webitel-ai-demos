@@ -3,6 +3,8 @@ results/
 saved_models/
 data/
 
+ai_audit_service/audit.cfg
+
 #ignore all protos except main folder
 */protos/** 
 
