@@ -7,7 +7,7 @@ from src.utils import split_stereo_to_mono, update_chunks
 import librosa
 from tempfile import NamedTemporaryFile
 import soundfile as sf
-import logging
+# import logging
 
 ## configuration
 config = configparser.RawConfigParser()
@@ -17,8 +17,9 @@ details_dict["last_date"] = int(details_dict["last_date"])
 device = details_dict["device"]
 variable_name = details_dict["variable_name"]
 min_talk_duration = details_dict["min_talk_duration"]
+hf_token = details_dict["hf_token"]
 language_list = json.loads(details_dict["languages"])
-
+print(hf_token)
 if variable_name == "none":
     variable_name = None
 if min_talk_duration == "none":
@@ -47,7 +48,8 @@ def job():
         status = json.load(open(json_path))
         webitel_connection.last_date = status["last_date"]
     except FileNotFoundError:
-        logging.log(logging.WARN, "File with last date does not exist")
+        # logging.log(logging.WARN, "File with last date does not exist")
+        print("File with last date does not exist")
 
     # we get file ids using access_tokens starting from last_date time
     call_ids, file_ids, last_dates, _, _ = webitel_connection.get_file_ids(
@@ -56,8 +58,7 @@ def job():
     # after we got ids we have updated last_date in webitel_connection
     # store it to local json
 
-    stt = STT(details_dict["model_type"], details_dict, device)
-
+    stt = STT(details_dict["model_type"], details_dict, device, hf_token)
     timestamp_processing = False
     # start loading and transcribing data
     for call_id, id, new_last_date in zip(call_ids, file_ids, last_dates):
@@ -108,16 +109,18 @@ def job():
                     transcription_results[channel] = channel_result
                 else:
                     res, used_language = stt.transcribe(mono_path, language=None)
+                    print(res)
                     transcription_results[channel] = res
             webitel_connection.upload_transcription(
                 call_id, id, transcription_results, used_language
             )
 
-        except Exception as e:
-            logging.log(
-                logging.ERROR,
-                f"Could not transcribe file {audio_path}. Error - {str(e)}",
-            )
+        # except Exception as e:
+        #     print(f"Could not transcribe file {audio_path}. Error - {str(e)})")
+        # logging.log(
+        #     logging.ERROR,
+        #     f"Could not transcribe file {audio_path}. Error - {str(e)}",
+        # )
 
         finally:
             # +1 to ensure that we do not start transcribing the same recording again

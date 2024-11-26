@@ -6,3 +6,5 @@ pydub
 faster-whisper @ https://github.com/SYSTRAN/faster-whisper/archive/refs/heads/master.tar.gz
 torch
 flask
+pyctcdecode
+kenlm

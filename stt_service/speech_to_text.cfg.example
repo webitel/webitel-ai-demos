@@ -1,13 +1,14 @@
 [CONFIG]
+#whisper/wav2vec/custom
+model_type=custom
+access_token=access_token
+base_url=https://cloud.webitel.ua/api
+device=cuda
 w2v_bert=/mnt/md1/trained_stt_models/w2v-bert-2.0-ukrainian/checkpoint-30000
 w2v_tokenizer=/home/nazar/Demo_Chatbot_retrieval/experiments/train_w2v_bert
 whisper=openai/whisper-medium
-#whisper or w2v_bert
-model_type=whisper
-access_token=access_token
-base_url=https://dev.webitel.com/api
-#Time from which to start collecting data, it is overriden by local json if such exists
 last_date=0
-#list of possible languages, model will select the one with the highest confidence
-# https://huggingface.co/speechbrain/lang-id-voxlingua107-ecapa/blob/main/label_encoder.txt
+hf_token=none
 languages=["uk","ru"]
+variable_name=none 
+min_talk_duration=5

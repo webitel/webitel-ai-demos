@@ -42,11 +42,12 @@ class WebitelConnection:
     ):
         """Uploads transcription data to the server."""
         url = f"{self.base_url}/storage/transcript_file"
-
+        print("uploading")
         # Prepare data in the required format
         phrases = []
         text = ""
         for channel, transcription in transcription_data.items():
+            print("upload", transcription)
             for chunk in transcription[0]["offsets"]:
                 phrases.append(
                     {
@@ -123,6 +124,11 @@ class WebitelConnection:
                 list_data = response.json()
                 if "items" in list_data:
                     for item in list_data["items"]:
+                        print(
+                            "contains_variable",
+                            contains_variable,
+                            contains_variable is None,
+                        )
                         # Need to increment last_date to last known processed date
                         last_date = int(item["stored_at"])
                         self.last_date = max(self.last_date, last_date)
