@@ -1,0 +1,33 @@
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH=/home/user/.local/bin:$PATH \
+    HOME=/home/user
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3.10-venv \
+    python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 1000 user
+USER user
+WORKDIR /app
+
+RUN python3.10 -m venv /home/user/venv
+ENV PATH="/home/user/venv/bin:$PATH"
+
+COPY --chown=1000 requirements.txt .
+RUN pip install --no-cache-dir -U pip setuptools wheel && \
+    pip install --no-cache-dir Cython packaging && \
+    pip install --no-cache-dir youtokentome --no-build-isolation && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir fastapi uvicorn pydantic nemo_toolkit
+
+COPY --chown=1000 . .
+
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

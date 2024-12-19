@@ -1,0 +1,7 @@
+Cython
+packaging
+
+huggingface_hub<0.22.1
+numpy<2
+
+nemo_toolkit[nlp]
