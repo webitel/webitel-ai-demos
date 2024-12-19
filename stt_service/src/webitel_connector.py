@@ -42,7 +42,7 @@ class WebitelConnection:
     ):
         """Uploads transcription data to the server."""
         url = f"{self.base_url}/storage/transcript_file"
-        print("uploading")
+        print("uploading", call_id, file_id)
         # Prepare data in the required format
         phrases = []
         text = ""
@@ -57,16 +57,16 @@ class WebitelConnection:
                         "phrase": chunk["text"],
                     }
                 )
-            text = f"Channel {channel} : {transcription[0]['text']} \n"
+            text += f"Channel {channel} : {transcription[0]['text']} \n"
 
         payload = {
             "file_id": file_id,
-            "locale": used_language,
+            "locale": "ukrainian",
             "phrases": phrases,
             "text": text,
             "uuid": call_id,
         }
-
+        print("payload", payload)
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -78,6 +78,7 @@ class WebitelConnection:
         if response.status_code == 200:
             print("Transcription uploaded successfully")
         else:
+            print(response.text)
             raise Exception(
                 f"Failed to upload transcription. Status code {response.status_code}, message {response.text}"
             )
@@ -99,7 +100,7 @@ class WebitelConnection:
         current_time = int(time.time() * 1000)
         while has_more_data:
             body = {
-                "size": 10,
+                "size": 1000,
                 "has_file": True,
                 "skip_parent": True,  # leg A
                 "stored_at": {"from": last_date, "to": current_time},
@@ -124,11 +125,11 @@ class WebitelConnection:
                 list_data = response.json()
                 if "items" in list_data:
                     for item in list_data["items"]:
-                        print(
-                            "contains_variable",
-                            contains_variable,
-                            contains_variable is None,
-                        )
+                        # print(
+                        #     "contains_variable",
+                        #     contains_variable,
+                        #     contains_variable is None,
+                        # )
                         # Need to increment last_date to last known processed date
                         last_date = int(item["stored_at"])
                         self.last_date = max(self.last_date, last_date)
@@ -138,9 +139,9 @@ class WebitelConnection:
                             and contains_variable
                             not in list(item.get("variables", {}).keys())
                         ):
-                            print(
-                                f"Skipping {item['id']} cause - does not contain variable {contains_variable}"
-                            )
+                            # print(
+                            #     f"Skipping {item['id']} cause - does not contain variable {contains_variable}"
+                            # )
                             continue
                         elif (
                             contains_variable is not None
@@ -154,13 +155,20 @@ class WebitelConnection:
                             # get only first
 
                             transcriptions_ids.append(item["transcripts"][0]["id"])
-
+                        print(call_ids)
                         call_ids.append(item["id"])
-
                         # for now only first file is used
                         file_ids.append(item["files"][0]["id"])
 
                         last_dates.append(last_date)
+                        if len(call_ids) == 20:
+                            return (
+                                call_ids,
+                                file_ids,
+                                last_dates,
+                                transcriptions_ids,
+                                audit_ids,
+                            )
                     # Check if there's more data to fetch
                     has_more_data = list_data.get("next", False)
                 else:
