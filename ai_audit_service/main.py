@@ -1,5 +1,5 @@
 from src.webitel_connector import WebitelConnection
-from src.llm_auditor import LLM_auditor
+from src.llm_auditor import DSPY_auditor
 import configparser
 import os
 import json
@@ -26,7 +26,7 @@ def save_date(date: int):
 webitel_connection = WebitelConnection(
     access_token, base_url=base_url, last_date=last_date
 )
-llm_auditor = LLM_auditor(api_key=OPENAI_API_KEY)
+llm_auditor = DSPY_auditor(api_key=OPENAI_API_KEY)
 
 
 if __name__ == "__main__":
@@ -51,10 +51,12 @@ if __name__ == "__main__":
         )
 
         question_with_options = [
-            (x[0], x[1][0]) for x in questions_with_options_and_scores
+            (x[0], tuple(option[0] for option in x[1]))
+            for x in questions_with_options_and_scores
         ]
-        result = llm_auditor.audit(transcription, question_with_options)
+        result, reasoning = llm_auditor.audit(transcription, question_with_options)
         result_with_scores = []
+        print(call_id, result)
         for question, options_scores in questions_with_options_and_scores:
             answer = result[question]
 
@@ -63,6 +65,7 @@ if __name__ == "__main__":
             for option_name, option_score in options_scores:
                 if option_name == answer:
                     score = option_score
+                    print(option_name, score)
                     break
 
             answer_dict = {"name": answer}
@@ -71,6 +74,6 @@ if __name__ == "__main__":
             result_with_scores.append(answer_dict)
 
         webitel_connection.post_audit_result(
-            call_id, audit_id, audit_name, result_with_scores, comment="ai_test"
+            call_id, audit_id, audit_name, result_with_scores, comment=reasoning
         )
-        save_date(last_date)
+        # save_date(last_date)

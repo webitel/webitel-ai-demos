@@ -115,7 +115,6 @@ class WebitelConnection:
                 "Content-Type": "application/json",
                 "x-webitel-access": self.access_token,
             }
-            print(body)
             response = requests.post(
                 self.base_url + "/calls/history", headers=headers, json=body
             )
@@ -192,7 +191,6 @@ class WebitelConnection:
         audit_name = None
         if response.status_code == 200:
             json_response = response.json()
-            print(json_response)
             for audit_question in json_response["questions"]:
                 question = audit_question["question"]
                 options_and_scores = [
@@ -239,7 +237,6 @@ class WebitelConnection:
             "Content-Type": "application/json",
             "x-webitel-access": self.access_token,
         }
-        print(payload)
         response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code != 200:
